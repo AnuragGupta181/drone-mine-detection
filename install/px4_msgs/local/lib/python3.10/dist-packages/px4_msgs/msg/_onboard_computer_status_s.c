@@ -1,0 +1,1 @@
+/home/ubuntu/px4_ros2_ws/build/px4_msgs/rosidl_generator_py/px4_msgs/msg/_onboard_computer_status_s.c

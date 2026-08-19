@@ -1,0 +1,40 @@
+# Stage 1 Competition Simulation Configuration
+
+field:
+  length: 40.0         # Field length (X axis) in meters
+  width: 10.0          # Field width (Y axis) in meters
+  frame_id: "world"    # Simulation field origin frame
+
+zones:
+  start_zone:
+    x_min: 0.0
+    x_max: 5.0
+    y_min: -5.0
+    y_max: 5.0
+  exit_zone:
+    x_min: 35.0
+    x_max: 40.0
+    y_min: -5.0
+    y_max: 5.0
+  minefield_zone:
+    x_min: 5.0
+    x_max: 35.0
+    y_min: -4.5
+    y_max: 4.5
+
+scenario:
+  seed: 42
+  num_mines: 20
+  num_obstacles: 4
+  mine_appearance_mode: "easy"  # "easy" (high visibility orange traffic cone) or "realistic"
+  mine_model_type: "traffic_cone" # Traffic cones represent simulated mines
+  min_mine_spacing: 1.2
+  min_obstacle_spacing: 2.0
+  min_path_clearance: 1.0       # Navigable corridor minimum width check
+
+human:
+  start_position:
+    x: 2.5
+    y: 0.0
+    z: 0.0
+    yaw: 0.0

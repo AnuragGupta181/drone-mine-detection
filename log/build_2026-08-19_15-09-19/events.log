@@ -1,0 +1,56 @@
+[0.000000] (-) TimerEvent: {}
+[0.001159] (-) JobUnselected: {'identifier': 'px4_msgs'}
+[0.002436] (px4_offboard) JobQueued: {'identifier': 'px4_offboard', 'dependencies': OrderedDict([('px4_msgs', '/home/ubuntu/px4_ros2_ws/install/px4_msgs')])}
+[0.002504] (px4_offboard) JobStarted: {'identifier': 'px4_offboard'}
+[0.098748] (-) TimerEvent: {}
+[0.199648] (-) TimerEvent: {}
+[0.300890] (-) TimerEvent: {}
+[0.401986] (-) TimerEvent: {}
+[0.502775] (-) TimerEvent: {}
+[0.603930] (-) TimerEvent: {}
+[0.704996] (-) TimerEvent: {}
+[0.806540] (-) TimerEvent: {}
+[0.908859] (-) TimerEvent: {}
+[1.009704] (-) TimerEvent: {}
+[1.110829] (-) TimerEvent: {}
+[1.212434] (-) TimerEvent: {}
+[1.313410] (-) TimerEvent: {}
+[1.415324] (-) TimerEvent: {}
+[1.516261] (-) TimerEvent: {}
+[1.617278] (-) TimerEvent: {}
+[1.718671] (-) TimerEvent: {}
+[1.820628] (-) TimerEvent: {}
+[1.845209] (px4_offboard) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'egg_info', '--egg-base', '../../build/px4_offboard', 'build', '--build-base', '/home/ubuntu/px4_ros2_ws/build/px4_offboard/build', 'install', '--record', '/home/ubuntu/px4_ros2_ws/build/px4_offboard/install.log', '--install-scripts', '$base/lib/px4_offboard', '--single-version-externally-managed', 'install_data'], 'cwd': '/home/ubuntu/px4_ros2_ws/src/px4_offboard', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'VSCODE_CWD': '/home/ubuntu/Downloads/Antigravity IDE', 'LANGUAGE': 'en_IN:en', 'USER': 'ubuntu', 'ANTIGRAVITY_SOURCE_METADATA': '{"tool":{"conversationId":"ef55e692-b187-42e5-af3d-ea70e9270019","stepIndex":120,"toolCall":{"id":"call_937423","name":"run_command","argumentsJson":"{\\"CommandLine\\":\\"bash -c \\\\\\"source /opt/ros/humble/setup.bash \\\\u0026\\\\u0026 colcon build --packages-select px4_offboard\\\\\\"\\",\\"Cwd\\":\\"/home/ubuntu/px4_ros2_ws\\",\\"WaitMsBeforeAsync\\":5000,\\"toolAction\\":\\"Rebuilding px4_offboard package\\",\\"toolSummary\\":\\"Rebuild px4_offboard after adding force arm fallback\\"}","thinkingSignature":"EoEBCn8BEU0yDw/xHnxywNldp8wn5UajZawbvraLCCzl4nvcXYndsVrzXXjX2nGFXts49MfNcBVgpOG5MP/8+Mu/Ga5QcGzo54Ma8tg9OJvXbI1NUGG7Z52V0zgjJ0KsaJJEJusy6vgev0v/yb1Y+9W0s5vYRrL3SndbbllTjHgJldR+","originalName":"run_command"}}}', 'VSCODE_NLS_CONFIG': '{"userLocale":"en-gb","osLocale":"en-in","resolvedLanguage":"en","defaultMessagesFile":"/home/ubuntu/Downloads/Antigravity IDE/resources/app/out/nls.messages.json","locale":"en-gb","availableLanguages":{}}', 'XDG_SESSION_TYPE': 'x11', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/home/ubuntu/px4_ros2_ws/install/px4_msgs/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/ubuntu', 'CHROME_DESKTOP': 'antigravity-ide.desktop', 'DESKTOP_SESSION': 'ubuntu', 'VSCODE_IPC_HOOK': '/run/user/1000/vscode-52fd6d17-1.10-main.sock', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'PAGER': 'cat', 'MANAGERPID': '1523', 'DBUS_STARTER_BUS_TYPE': 'session', 'SYSTEMD_EXEC_PID': '1840', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus,guid=978d72f55faf3b04564956356a857812', 'ANTIGRAVITY_AGENT': '1', 'GIO_LAUNCHED_DESKTOP_FILE_PID': '3490', 'NVM_DIR': '/home/ubuntu/.nvm', 'ROS_DISTRO': 'humble', 'GTK_IM_MODULE': 'ibus', 'LOGNAME': 'ubuntu', 'JOURNAL_STREAM': '8:15234', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'ubuntu', 'TERM': 'dumb', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'FC_FONTATIONS': '1', 'ROS_LOCALHOST_ONLY': '0', 'WINDOWPATH': '2', 'ANTIGRAVITY_EDITOR_APP_ROOT': '/home/ubuntu/Downloads/Antigravity IDE/resources/app', 'PATH': '/opt/ros/humble/bin:/home/ubuntu/.gemini/antigravity-ide/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/usr/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/opt/xtensa-esp-elf/bin/:/opt/xtensa-esp-elf/bin/', 'SESSION_MANAGER': 'local/anurag-ubuntu22:@/tmp/.ICE-unix/1840,unix/anurag-ubuntu22:/tmp/.ICE-unix/1840', 'INVOCATION_ID': '8a011c9f7d2242c49bbc3ecd4ca809ae', 'XDG_MENU_PREFIX': 'gnome-', 'XDG_RUNTIME_DIR': '/run/user/1000', 'GDK_BACKEND': 'x11', 'DISPLAY': ':1', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/gdm/Xauthority', 'LS_COLORS': '', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/home/ubuntu/px4_ros2_ws/install/px4_msgs:/opt/ros/humble', 'SHELL': '/bin/bash', 'ANTIGRAVITY_LS_ADDRESS': 'localhost:37993', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GPG_AGENT_INFO': '/run/user/1000/gnupg/S.gpg-agent:0:1', 'GIT_PAGER': 'cat', 'QT_IM_MODULE': 'ibus', 'ANTIGRAVITY_TRAJECTORY_ID': '1aa29252-b370-4846-acd0-947628da38c1', 'PWD': '/home/ubuntu/px4_ros2_ws/build/px4_offboard', 'LC_ALL': 'en_US.UTF-8', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'VSCODE_CODE_CACHE_PATH': '/home/ubuntu/.config/Antigravity IDE/CachedData/e0b7a2bcf575cfba10528c4e7c10bd3ce2d7769a', 'NVM_CD_FLAGS': '', 'DBUS_STARTER_ADDRESS': 'unix:path=/run/user/1000/bus,guid=978d72f55faf3b04564956356a857812', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/ubuntu/px4_ros2_ws/build/px4_offboard/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ubuntu/px4_ros2_ws/install/px4_offboard/lib/python3.10/site-packages:/home/ubuntu/px4_ros2_ws/install/px4_msgs/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'ANTIGRAVITY_CSRF_TOKEN': 'b93ef596-934c-4250-9363-0a2efd104720', 'VSCODE_PID': '3490', 'CMAKE_PREFIX_PATH': '/home/ubuntu/px4_ros2_ws/install/px4_msgs'}, 'shell': False}
+[1.920908] (-) TimerEvent: {}
+[2.021771] (-) TimerEvent: {}
+[2.123004] (-) TimerEvent: {}
+[2.224353] (-) TimerEvent: {}
+[2.325110] (-) TimerEvent: {}
+[2.394442] (px4_offboard) StdoutLine: {'line': b'running egg_info\n'}
+[2.396634] (px4_offboard) StdoutLine: {'line': b'writing ../../build/px4_offboard/px4_offboard.egg-info/PKG-INFO\n'}
+[2.397124] (px4_offboard) StdoutLine: {'line': b'writing dependency_links to ../../build/px4_offboard/px4_offboard.egg-info/dependency_links.txt\n'}
+[2.397375] (px4_offboard) StdoutLine: {'line': b'writing entry points to ../../build/px4_offboard/px4_offboard.egg-info/entry_points.txt\n'}
+[2.397600] (px4_offboard) StdoutLine: {'line': b'writing requirements to ../../build/px4_offboard/px4_offboard.egg-info/requires.txt\n'}
+[2.397690] (px4_offboard) StdoutLine: {'line': b'writing top-level names to ../../build/px4_offboard/px4_offboard.egg-info/top_level.txt\n'}
+[2.401837] (px4_offboard) StdoutLine: {'line': b"reading manifest file '../../build/px4_offboard/px4_offboard.egg-info/SOURCES.txt'\n"}
+[2.402540] (px4_offboard) StdoutLine: {'line': b"writing manifest file '../../build/px4_offboard/px4_offboard.egg-info/SOURCES.txt'\n"}
+[2.403083] (px4_offboard) StdoutLine: {'line': b'running build\n'}
+[2.403247] (px4_offboard) StdoutLine: {'line': b'running build_py\n'}
+[2.403665] (px4_offboard) StdoutLine: {'line': b'copying px4_offboard/offboard_control_node.py -> /home/ubuntu/px4_ros2_ws/build/px4_offboard/build/lib/px4_offboard\n'}
+[2.403948] (px4_offboard) StdoutLine: {'line': b'running install\n'}
+[2.405430] (px4_offboard) StdoutLine: {'line': b'running install_lib\n'}
+[2.408812] (px4_offboard) StdoutLine: {'line': b'copying /home/ubuntu/px4_ros2_ws/build/px4_offboard/build/lib/px4_offboard/offboard_control_node.py -> /home/ubuntu/px4_ros2_ws/install/px4_offboard/lib/python3.10/site-packages/px4_offboard\n'}
+[2.411209] (px4_offboard) StdoutLine: {'line': b'byte-compiling /home/ubuntu/px4_ros2_ws/install/px4_offboard/lib/python3.10/site-packages/px4_offboard/offboard_control_node.py to offboard_control_node.cpython-310.pyc\n'}
+[2.418072] (px4_offboard) StdoutLine: {'line': b'running install_data\n'}
+[2.418673] (px4_offboard) StdoutLine: {'line': b'running install_egg_info\n'}
+[2.422399] (px4_offboard) StdoutLine: {'line': b"removing '/home/ubuntu/px4_ros2_ws/install/px4_offboard/lib/python3.10/site-packages/px4_offboard-0.0.0-py3.10.egg-info' (and everything under it)\n"}
+[2.422789] (px4_offboard) StdoutLine: {'line': b'Copying ../../build/px4_offboard/px4_offboard.egg-info to /home/ubuntu/px4_ros2_ws/install/px4_offboard/lib/python3.10/site-packages/px4_offboard-0.0.0-py3.10.egg-info\n'}
+[2.423568] (px4_offboard) StdoutLine: {'line': b'running install_scripts\n'}
+[2.425356] (-) TimerEvent: {}
+[2.468347] (px4_offboard) StdoutLine: {'line': b'Installing offboard_control script to /home/ubuntu/px4_ros2_ws/install/px4_offboard/lib/px4_offboard\n'}
+[2.468939] (px4_offboard) StdoutLine: {'line': b"writing list of installed files to '/home/ubuntu/px4_ros2_ws/build/px4_offboard/install.log'\n"}
+[2.525822] (-) TimerEvent: {}
+[2.627680] (-) TimerEvent: {}
+[2.647835] (px4_offboard) CommandEnded: {'returncode': 0}
+[2.696758] (px4_offboard) JobEnded: {'identifier': 'px4_offboard', 'rc': 0}
+[2.699537] (-) EventReactorShutdown: {}
