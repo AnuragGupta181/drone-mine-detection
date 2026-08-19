@@ -13,10 +13,8 @@ def generate_data_files():
         (os.path.join('share', package_name, 'rviz'), glob('rviz/*.rviz')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.sdf')),
         (os.path.join('share', package_name, 'worlds/generated'), glob('worlds/generated/*.sdf') + glob('worlds/generated/*.json')),
-        (os.path.join('lib', package_name), glob('scripts/*.py')),
     ]
 
-    # Include model directories recursively
     for root, dirs, files in os.walk('models'):
         if files:
             rel_path = os.path.relpath(root, 'models')
@@ -42,7 +40,7 @@ setup(
         'console_scripts': [
             'ground_truth_publisher = competition_sim.ground_truth_publisher:main',
             'mission_evaluator = competition_sim.mission_evaluator:main',
-            'scenario_generator = scripts.scenario_generator:main',
+            'scenario_generator = competition_sim.scenario_generator:main',
         ],
     },
 )

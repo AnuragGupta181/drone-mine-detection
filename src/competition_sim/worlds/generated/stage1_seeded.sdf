@@ -1,0 +1,151 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="stage1_field">
+    <!-- Physics engine -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- Plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Sun Light -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground Plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.3 0.4 0.3 1.0</ambient>
+            <diffuse>0.3 0.5 0.3 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Field Enclosure Walls (10m x 40m Field: X=[0,40], Y=[-5,5]) -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>20.0 5.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual"><geometry><box><size>40.0 0.1 1.0</size></box></geometry><material><ambient>0.8 0.8 0.8 1.0</ambient></material></visual>
+        <collision name="collision"><geometry><box><size>40.0 0.1 1.0</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="wall_south">
+      <static>true</static>
+      <pose>20.0 -5.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual"><geometry><box><size>40.0 0.1 1.0</size></box></geometry><material><ambient>0.8 0.8 0.8 1.0</ambient></material></visual>
+        <collision name="collision"><geometry><box><size>40.0 0.1 1.0</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="wall_west">
+      <static>true</static>
+      <pose>0.0 0.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual"><geometry><box><size>0.1 10.0 1.0</size></box></geometry><material><ambient>0.8 0.8 0.8 1.0</ambient></material></visual>
+        <collision name="collision"><geometry><box><size>0.1 10.0 1.0</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="wall_east">
+      <static>true</static>
+      <pose>40.0 0.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual"><geometry><box><size>0.1 10.0 1.0</size></box></geometry><material><ambient>0.8 0.8 0.8 1.0</ambient></material></visual>
+        <collision name="collision"><geometry><box><size>0.1 10.0 1.0</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- Start Zone Mat (X=[0, 5], Y=[-5, 5]) -->
+    <model name="start_zone_mat">
+      <static>true</static>
+      <pose>2.5 0.0 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>5.0 10.0 0.001</size></box></geometry>
+          <material><ambient>0.1 0.6 0.1 0.7</ambient><diffuse>0.2 0.8 0.2 0.7</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Exit Zone Mat (X=[35, 40], Y=[-5, 5]) -->
+    <model name="exit_zone_mat">
+      <static>true</static>
+      <pose>37.5 0.0 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>5.0 10.0 0.001</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 0.7</ambient><diffuse>0.2 0.4 0.9 0.7</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Static Human Model -->
+    <include>
+      <uri>model://static_human</uri>
+      <name>human_0</name>
+      <pose>2.5 0.0 0.0 0 0 0.0</pose>
+    </include>
+
+    <!-- Static Obstacles -->
+    <include><uri>model://static_obstacle</uri><name>obstacle_1</name><pose>12.0 0.0 0.0 0 0 0</pose></include>
+    <include><uri>model://static_obstacle</uri><name>obstacle_2</name><pose>20.0 -2.0 0.0 0 0 0</pose></include>
+    <include><uri>model://static_obstacle</uri><name>obstacle_3</name><pose>27.0 1.5 0.0 0 0 0</pose></include>
+    <include><uri>model://static_obstacle</uri><name>obstacle_4</name><pose>33.0 -0.5 0.0 0 0 0</pose></include>
+
+    <!-- Simulated Mines (Traffic Cones) -->
+    <include><uri>model://traffic_cone</uri><name>mine_1</name><pose>10.2 1.5 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_2</name><pose>11.8 -2.3 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_3</name><pose>13.5 3.1 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_4</name><pose>15.0 -0.8 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_5</name><pose>16.4 2.0 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_6</name><pose>18.1 -3.5 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_7</name><pose>19.7 0.5 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_8</name><pose>21.2 -1.9 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_9</name><pose>22.8 3.8 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_10</name><pose>24.0 -2.7 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_11</name><pose>25.5 1.2 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_12</name><pose>26.9 -0.4 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_13</name><pose>28.3 2.5 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_14</name><pose>29.6 -3.1 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_15</name><pose>30.8 0.9 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_16</name><pose>32.1 -1.8 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_17</name><pose>33.4 3.0 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_18</name><pose>34.2 -2.5 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_19</name><pose>8.5 -1.2 0.0 0 0 0</pose></include>
+    <include><uri>model://traffic_cone</uri><name>mine_20</name><pose>7.0 2.4 0.0 0 0 0</pose></include>
+  </world>
+</sdf>

@@ -1,0 +1,141 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="stage1_field">
+    <!-- Physics engine -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- Plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Sun Light -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground Plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.3 0.4 0.3 1.0</ambient>
+            <diffuse>0.3 0.5 0.3 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Field Enclosure Walls (10m x 40m Field: X=[0,40], Y=[-5,5]) -->
+    <!-- North Wall (Y=+5m) -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>20.0 5.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>40.0 0.1 1.0</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1.0</ambient><diffuse>0.9 0.9 0.9 1.0</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>40.0 0.1 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- South Wall (Y=-5m) -->
+    <model name="wall_south">
+      <static>true</static>
+      <pose>20.0 -5.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>40.0 0.1 1.0</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1.0</ambient><diffuse>0.9 0.9 0.9 1.0</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>40.0 0.1 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- West Wall (Start Zone End: X=0m) -->
+    <model name="wall_west">
+      <static>true</static>
+      <pose>0.0 0.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.1 10.0 1.0</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1.0</ambient><diffuse>0.9 0.9 0.9 1.0</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.1 10.0 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- East Wall (Exit Zone End: X=40m) -->
+    <model name="wall_east">
+      <static>true</static>
+      <pose>40.0 0.0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.1 10.0 1.0</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1.0</ambient><diffuse>0.9 0.9 0.9 1.0</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.1 10.0 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Start Zone Visual Marker Mat (X=[0, 5], Y=[-5, 5]) -->
+    <model name="start_zone_mat">
+      <static>true</static>
+      <pose>2.5 0.0 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>5.0 10.0 0.001</size></box></geometry>
+          <material><ambient>0.1 0.6 0.1 0.7</ambient><diffuse>0.2 0.8 0.2 0.7</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Exit Zone Visual Marker Mat (X=[35, 40], Y=[-5, 5]) -->
+    <model name="exit_zone_mat">
+      <static>true</static>
+      <pose>37.5 0.0 0.005 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>5.0 10.0 0.001</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 0.7</ambient><diffuse>0.2 0.4 0.9 0.7</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
