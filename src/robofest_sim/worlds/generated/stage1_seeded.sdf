@@ -1,11 +1,27 @@
-<?xml version="1.0" ?>
-<sdf version="1.6">
-  <world name="stage1_field">
-    <physics name="1ms" type="ignored">
-      <max_step_size>0.001</max_step_size>
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.9">
+  <world name="stage1_seeded">
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
       <real_time_factor>1.0</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
+      <real_time_update_rate>250</real_time_update_rate>
     </physics>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+    <scene>
+      <grid>false</grid>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>true</shadows>
+    </scene>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>47.397971057728974</latitude_deg>
+      <longitude_deg>8.546163739800146</longitude_deg>
+      <elevation>0</elevation>
+    </spherical_coordinates>
 
     <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
@@ -13,6 +29,10 @@
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
       <render_engine>ogre2</render_engine>
     </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-air-pressure-system" name="gz::sim::systems::AirPressure"/>
+    <plugin filename="gz-sim-magnetometer-system" name="gz::sim::systems::Magnetometer"/>
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
 
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
@@ -109,14 +129,6 @@
       </link>
     </model>
   
-    <!-- Sensor-Equipped Quadrotor Model (x500_sensors) -->
-    <include>
-      <uri>model://x500_sensors</uri>
-      <name>drone_0</name>
-      <pose>0.0 0.0 0.2 0 0 0</pose>
-    </include>
-
-
     <!-- Static Human Model -->
     <include>
       <uri>model://static_human</uri>

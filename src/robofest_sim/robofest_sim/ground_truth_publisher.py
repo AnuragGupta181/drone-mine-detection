@@ -155,7 +155,7 @@ class GroundTruthPublisher(Node):
         drone_marker.id = 0
         drone_marker.type = Marker.CYLINDER
         drone_marker.action = Marker.ADD
-        drone_marker.pose.position.x = 0.0
+        drone_marker.pose.position.x = 4.5
         drone_marker.pose.position.y = 0.0
         drone_marker.pose.position.z = 0.2
         drone_marker.scale.x = 0.6 # 60cm diameter quadrotor

@@ -83,19 +83,22 @@ class OffboardControlNode(Node):
         self.vehicle_cmd_pub.publish(msg)
 
     def timer_callback(self):
+        # Human is at X=2.5m, Y=0.0m in Start Zone.
+        # Hover target: X=4.5m (2 meters in front of human towards minefield), Y=0.0m, Z=-2.0m (2m altitude)
+        target_x = 4.5
+        target_y = 0.0
+        target_z = -2.0
+
         # 1. Always stream Heartbeat & Trajectory Setpoints continuously (> 2Hz required)
         self.publish_offboard_control_mode()
-        self.publish_trajectory_setpoint(x=0.0, y=0.0, z=-2.0)
+        self.publish_trajectory_setpoint(x=target_x, y=target_y, z=target_z, yaw=0.0)
 
-        # 2. Warm-up phase: stream setpoints for first 10 cycles (1 sec)
-        if self.offboard_counter < 10:
+        # 2. Warm-up phase: stream setpoints for first 30 cycles (3 sec) for PX4 EKF2 readiness
+        if self.offboard_counter < 30:
             self.offboard_counter += 1
             return
 
         # 3. State Machine based on telemetry feedback
-        # VehicleStatus.NAVIGATION_STATE_OFFBOARD = 14
-        # VehicleStatus.ARMING_STATE_ARMED = 2
-
         if self.nav_state != VehicleStatus.NAVIGATION_STATE_OFFBOARD:
             if self.offboard_counter % 10 == 0:
                 self.get_logger().info("Requesting OFFBOARD mode...")
@@ -114,12 +117,12 @@ class OffboardControlNode(Node):
         else:
             # Armed and in OFFBOARD mode!
             if self.armed_counter == 0:
-                self.get_logger().info("Vehicle ARMED and in OFFBOARD mode! Taking off to 2m hover...")
+                self.get_logger().info(f"Vehicle ARMED and in OFFBOARD mode! Moving to (X={target_x}m, Y={target_y}m) in front of human at 2m altitude...")
 
             self.armed_counter += 1
 
-            if self.armed_counter == 100:  # 10 seconds of hover
-                self.get_logger().info("10s hover complete. Initiating Autonomous Landing...")
+            if self.armed_counter == 200:  # 20 seconds hover
+                self.get_logger().info("20s hover in front of human complete. Initiating Autonomous Landing...")
                 self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_LAND)
 
         self.offboard_counter += 1

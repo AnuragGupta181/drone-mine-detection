@@ -171,18 +171,12 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
     with open(base_world_path, "r") as f:
         world_sdf = f.read()
 
+    # Ensure world name tag matches stage1_seeded for PX4 SITL lookup
+    import re
+    world_sdf = re.sub(r'<world name="[^"]+">', '<world name="stage1_seeded">', world_sdf)
+
     sdf_insertions = []
     
-    # 0. Drone Model Inclusion (x500_sensors at Start Zone origin)
-    sdf_insertions.append("""
-    <!-- Sensor-Equipped Quadrotor Model (x500_sensors) -->
-    <include>
-      <uri>model://x500_sensors</uri>
-      <name>drone_0</name>
-      <pose>0.0 0.0 0.2 0 0 0</pose>
-    </include>
-""")
-
     # 1. Human Model Inclusion
     sdf_insertions.append(f"""
     <!-- Static Human Model -->
