@@ -18,7 +18,8 @@ def parse_args():
     parser.add_argument("--obstacles", type=int, default=None, help="Obstacle count override")
     parser.add_argument("--output-sdf", type=str, default="", help="Output SDF file path")
     parser.add_argument("--output-json", type=str, default="", help="Output ground truth JSON path")
-    return parser.parse_args()
+    args, _ = parser.parse_known_args()
+    return args
 
 def load_config(config_path):
     if not config_path:
@@ -171,6 +172,18 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
         world_sdf = f.read()
 
     sdf_insertions = []
+    
+    # 0. Drone Model Inclusion (x500_sensors at Start Zone origin)
+    sdf_insertions.append("""
+    <!-- Sensor-Equipped Quadrotor Model (x500_sensors) -->
+    <include>
+      <uri>model://x500_sensors</uri>
+      <name>drone_0</name>
+      <pose>0.0 0.0 0.2 0 0 0</pose>
+    </include>
+""")
+
+    # 1. Human Model Inclusion
     sdf_insertions.append(f"""
     <!-- Static Human Model -->
     <include>

@@ -1,0 +1,128 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="x500_sensors">
+    <pose>0 0 0.2 0 0 0</pose>
+    <link name="base_link">
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>2.0</mass>
+        <inertia>
+          <ixx>0.03</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.03</iyy>
+          <iyz>0</iyz>
+          <izz>0.06</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="base_collision">
+        <geometry>
+          <cylinder>
+            <radius>0.3</radius>
+            <length>0.15</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="base_visual">
+        <geometry>
+          <cylinder>
+            <radius>0.3</radius>
+            <length>0.15</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1.0</ambient>
+          <diffuse>0.3 0.3 0.3 1.0</diffuse>
+        </material>
+      </visual>
+
+      <!-- 2D 360 LiDAR Sensor -->
+      <sensor name="lidar_2d" type="gpu_lidar">
+        <pose>0 0 0.1 0 0 0</pose>
+        <always_on>true</always_on>
+        <update_rate>10.0</update_rate>
+        <topic>/scan</topic>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.1415926</min_angle>
+              <max_angle>3.1415926</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>12.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </lidar>
+      </sensor>
+
+      <!-- RealSense D435i Depth & RGB Camera Sensor -->
+      <sensor name="d435i_depth" type="rgbd_camera">
+        <pose>0.15 0 0 0 0 0</pose>
+        <always_on>true</always_on>
+        <update_rate>15.0</update_rate>
+        <topic>/camera</topic>
+        <camera>
+          <horizontal_fov>1.500983</horizontal_fov> <!-- 86 deg -->
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.2</near>
+            <far>10.0</far>
+          </clip>
+        </camera>
+      </sensor>
+
+      <!-- PMW3901 Optical Flow Sensor -->
+      <sensor name="optical_flow" type="camera">
+        <pose>0 0 -0.05 0 1.5707963 0</pose>
+        <always_on>true</always_on>
+        <update_rate>20.0</update_rate>
+        <topic>/optical_flow</topic>
+        <camera>
+          <horizontal_fov>0.7</horizontal_fov>
+          <image>
+            <width>64</width>
+            <height>64</height>
+            <format>L8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>10.0</far>
+          </clip>
+        </camera>
+      </sensor>
+
+      <!-- Downward Rangefinder Sensor -->
+      <sensor name="downward_rangefinder" type="gpu_lidar">
+        <pose>0 0 -0.05 0 1.5707963 0</pose>
+        <always_on>true</always_on>
+        <update_rate>20.0</update_rate>
+        <topic>/rangefinder</topic>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.05</min>
+            <max>10.0</max>
+            <resolution>0.005</resolution>
+          </range>
+        </lidar>
+      </sensor>
+    </link>
+  </model>
+</sdf>

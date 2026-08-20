@@ -67,7 +67,15 @@ def generate_launch_description():
         }]
     )
 
-    # 4. RViz2 Node
+    # 4. Sensor Health & Diagnostic Monitor Node (Phase 2.2)
+    sensor_health_node = Node(
+        package='robofest_sim',
+        executable='sensor_health_monitor',
+        name='sensor_health_monitor',
+        output='screen'
+    )
+
+    # 5. RViz2 Node
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -83,5 +91,6 @@ def generate_launch_description():
         generate_scenario_cmd,
         ground_truth_node,
         mission_evaluator_node,
+        sensor_health_node,
         rviz_node
     ])

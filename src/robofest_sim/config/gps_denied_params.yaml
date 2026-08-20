@@ -1,0 +1,16 @@
+# PX4 GPS-Denied EKF2 Parameter Configuration Profile for Phase 2.2
+
+# EKF2 Failsafe & Fusion Controls
+EKF2_GPS_CTRL: 0    # Disable GPS fusion (0 = Disabled)
+EKF2_OF_CTRL: 1     # Enable Optical Flow velocity fusion (1 = Enabled)
+EKF2_HGT_MODE: 2    # Height sensor mode: Rangefinder (2 = Distance Sensor / Rangefinder)
+
+# System Hardware Configuration
+SYS_HAS_GPS: 0      # Physical GPS hardware: Not present
+
+# Sensor Frequencies & Thresholds
+sensors:
+  laser_scan_min_freq: 10.0      # Hz
+  depth_camera_min_freq: 15.0    # Hz
+  optical_flow_min_freq: 20.0    # Hz
+  rangefinder_min_freq: 20.0     # Hz

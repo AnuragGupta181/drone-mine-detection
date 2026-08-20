@@ -41,6 +41,7 @@ setup(
             'ground_truth_publisher = robofest_sim.ground_truth_publisher:main',
             'mission_evaluator = robofest_sim.mission_evaluator:main',
             'scenario_generator = robofest_sim.scenario_generator:main',
+            'sensor_health_monitor = robofest_sim.sensor_health_monitor:main',
         ],
     },
 )

@@ -31,6 +31,7 @@ class GroundTruthPublisher(Node):
         self.start_zone_pub = self.create_publisher(Marker, '/ground_truth/start_zone', 10)
         self.exit_zone_pub = self.create_publisher(Marker, '/ground_truth/exit_zone', 10)
         self.human_pub = self.create_publisher(PoseStamped, '/ground_truth/human_pose', 10)
+        self.drone_pub = self.create_publisher(Marker, '/ground_truth/drone_marker', 10)
         
         self.timer = self.create_timer(1.0 / publish_rate, self.timer_callback)
         self.get_logger().info("GroundTruthPublisher initialized and publishing at 10 Hz.")
@@ -147,6 +148,25 @@ class GroundTruthPublisher(Node):
             h_pose.pose.orientation.w = 1.0
             self.human_pub.publish(h_pose)
 
+        # 6. Publish Ground Truth Drone Marker (Start Zone launch origin)
+        drone_marker = Marker()
+        drone_marker.header = header
+        drone_marker.ns = "drone_marker"
+        drone_marker.id = 0
+        drone_marker.type = Marker.CYLINDER
+        drone_marker.action = Marker.ADD
+        drone_marker.pose.position.x = 0.0
+        drone_marker.pose.position.y = 0.0
+        drone_marker.pose.position.z = 0.2
+        drone_marker.scale.x = 0.6 # 60cm diameter quadrotor
+        drone_marker.scale.y = 0.6
+        drone_marker.scale.z = 0.15 # height
+        drone_marker.color.r = 0.9 # Dark yellow/gold quadrotor marker
+        drone_marker.color.g = 0.7
+        drone_marker.color.b = 0.1
+        drone_marker.color.a = 0.95
+        self.drone_pub.publish(drone_marker)
+
 def main(args=None):
     rclpy.init(args=args)
     node = GroundTruthPublisher()
@@ -156,7 +176,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

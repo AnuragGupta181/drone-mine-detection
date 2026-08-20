@@ -523,7 +523,7 @@ The architecture defines measurable metrics:
 
 #### Phase 2.1 — Competition Simulation Environment
 * 10 m × 40 m field.
-* 20+ mines.
+* 20+ mines (simulated via traffic cones).
 * 3–5 static obstacles.
 * Start Zone.
 * Exit Zone.
@@ -531,6 +531,7 @@ The architecture defines measurable metrics:
 * Mission timer.
 * Ground-truth data.
 * Randomized/repeatable scenarios.
+**Status: COMPLETE**
 
 #### Phase 2.2 — GPS-Denied Sensor & Localization Foundation
 * IMU.
