@@ -32,6 +32,18 @@ def generate_launch_description():
         description='Whether to start RViz2'
     )
 
+    publish_lidar_tf_arg = DeclareLaunchArgument(
+        'publish_lidar_static_tf',
+        default_value='false',
+        description='Whether to publish static base_link -> lidar_link TF if not provided by Gazebo'
+    )
+
+    slam_arg = DeclareLaunchArgument(
+        'slam',
+        default_value='true',
+        description='Whether to launch slam_toolbox 2D SLAM'
+    )
+
     # 1. Scenario Generator Node Action
     generate_scenario_cmd = Node(
         package='robofest_sim',
@@ -75,7 +87,34 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 5. RViz2 Node
+    # 5. Temporary Simulation TF Publisher (Phase 2.3: odom -> base_link)
+    sim_tf_node = Node(
+        package='robofest_sim',
+        executable='sim_tf_publisher',
+        name='sim_tf_publisher',
+        output='screen'
+    )
+
+    # 6. 2D LiDAR SLAM Toolbox Node (Phase 2.3)
+    slam_params_path = PathJoinSubstitution([pkg_robofest_sim, 'config', 'slam_toolbox_params.yaml'])
+    slam_toolbox_node = Node(
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen',
+        parameters=[slam_params_path]
+    )
+
+    # 7. Static Map -> World TF Publisher (Syncs RViz ground truth markers in world frame with map frame)
+    static_map_world_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_map_world_tf',
+        output='screen',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'world']
+    )
+
+    # 8. RViz2 Node
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -88,9 +127,14 @@ def generate_launch_description():
         config_arg,
         seed_arg,
         rviz_arg,
+        publish_lidar_tf_arg,
+        slam_arg,
         generate_scenario_cmd,
         ground_truth_node,
         mission_evaluator_node,
         sensor_health_node,
+        sim_tf_node,
+        slam_toolbox_node,
+        static_map_world_tf,
         rviz_node
     ])

@@ -537,18 +537,20 @@ The architecture defines measurable metrics:
 * IMU.
 * PMW3901 optical flow.
 * Rangefinder.
-* 2D LiDAR.
-* External odometry.
-* PX4 EKF2.
-* GPS-disabled operation.
+* 2D LiDAR (`/scan`).
+* D435i Depth/RGB camera streams.
+* PX4 EKF2 parameter profile (`EKF2_GPS_CTRL=0`, `EKF2_OF_CTRL=1`, `EKF2_HGT_MODE=2`).
+* Diagnostic sensor health monitor node.
+**Status: COMPLETE**
 
-#### Phase 2.3 — LiDAR Mapping & Localization
-* `/scan`.
-* Scan matching.
-* LiDAR odometry.
-* 2D SLAM.
-* `map` -> `odom` -> `base_link`.
-* Localization validation.
+#### Phase 2.3 — LiDAR Mapping & 2D SLAM
+* `/scan` + temporary simulation odometry bridge (`sim_tf_publisher`: NED/FRD -> ENU/FLU).
+* `slam_toolbox` in `online_async` mode (0.05m grid cell resolution).
+* 2D Occupancy Grid Map (`/map`) publication at 1 Hz.
+* Dynamic transform publishing (`map -> odom` at 50 Hz).
+* Complete TF tree: `map` -> `odom` -> `base_link` -> `actual_lidar_frame`.
+* Zero ground-truth input to SLAM/TF node.
+**Status: COMPLETE**
 
 #### Phase 2.4 — External Odometry & PX4 EKF2 Integration
 * `nav_msgs/msg/Odometry`.

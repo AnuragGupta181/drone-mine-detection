@@ -1,0 +1,49 @@
+# Configured for Phase 2.3: 2D LiDAR SLAM & Mapping
+slam_toolbox:
+  ros__parameters:
+    # Solver & Optimizer Settings
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # ROS Frame & Topic Names
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    mode: mapping
+
+    # Timing & Queue Parameters
+    transform_publish_period: 0.02 # 50 Hz map -> odom TF update
+    map_update_interval: 1.0       # 1 Hz map occupancy grid update
+    scan_queue_size: 1             # Queue size 1 for online_async mode
+
+    # Grid & Processing Parameters
+    resolution: 0.05            # 5 cm per cell
+    max_laser_range: 20.0       # Max LiDAR range (meters)
+    minimum_time_interval: 0.1  # Process scans at ~10 Hz
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.0
+    stack_size_to_use: 40000000
+    enable_interactive_mode: true
+
+    # Scan Matcher Parameters
+    use_scan_matching: true
+    use_scan_barycenter: true
+    minimum_travel_distance: 0.1
+    minimum_travel_heading: 0.05
+    scan_buffer_size: 10
+    scan_buffer_maximum_scan_distance: 10.0
+    link_match_minimum_response_fine: 0.1
+    link_scan_maximum_distance: 1.5
+
+    # Loop Closure Parameters
+    do_loop_closing: true
+    loop_search_maximum_distance: 3.0
+    loop_match_minimum_chain_size: 3
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
