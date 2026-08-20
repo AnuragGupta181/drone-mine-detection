@@ -3,7 +3,6 @@
   <model name="traffic_cone">
     <static>true</static>
     <link name="link">
-      <!-- Base Plate -->
       <collision name="base_collision">
         <pose>0 0 0.02 0 0 0</pose>
         <geometry>
@@ -25,7 +24,6 @@
         </material>
       </visual>
 
-      <!-- Cone Body -->
       <collision name="cone_collision">
         <pose>0 0 0.27 0 0 0</pose>
         <geometry>
@@ -50,7 +48,6 @@
         </material>
       </visual>
       
-      <!-- Reflective Stripe -->
       <visual name="stripe_visual">
         <pose>0 0 0.35 0 0 0</pose>
         <geometry>

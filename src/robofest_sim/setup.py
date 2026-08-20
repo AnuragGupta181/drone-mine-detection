@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'competition_sim'
+package_name = 'robofest_sim'
 
 def generate_data_files():
     data_files = [
@@ -33,14 +33,14 @@ setup(
     zip_safe=True,
     maintainer='ubuntu',
     maintainer_email='ubuntu@todo.todo',
-    description='GPS-Denied Autonomous Drone Competition Simulation Environment',
+    description='GPS-Denied Autonomous Drone Robofest Simulation Environment',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ground_truth_publisher = competition_sim.ground_truth_publisher:main',
-            'mission_evaluator = competition_sim.mission_evaluator:main',
-            'scenario_generator = competition_sim.scenario_generator:main',
+            'ground_truth_publisher = robofest_sim.ground_truth_publisher:main',
+            'mission_evaluator = robofest_sim.mission_evaluator:main',
+            'scenario_generator = robofest_sim.scenario_generator:main',
         ],
     },
 )

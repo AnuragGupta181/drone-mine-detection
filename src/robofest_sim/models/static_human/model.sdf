@@ -3,7 +3,6 @@
   <model name="static_human">
     <static>true</static>
     <link name="link">
-      <!-- Torso / Body -->
       <collision name="body_collision">
         <pose>0 0 0.85 0 0 0</pose>
         <geometry>
@@ -27,7 +26,6 @@
         </material>
       </visual>
 
-      <!-- Head -->
       <visual name="head_visual">
         <pose>0 0 1.85 0 0 0</pose>
         <geometry>

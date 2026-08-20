@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" type="application/xml" schematypens="http://download.ros.org/schema/package_format3.xsd"?>
 <package format="3">
-  <name>competition_sim</name>
+  <name>robofest_sim</name>
   <version>0.1.0</version>
-  <description>GPS-Denied Autonomous Drone Competition Simulation Environment</description>
+  <description>GPS-Denied Autonomous Drone Robofest Simulation Environment</description>
   <maintainer email="ubuntu@todo.todo">ubuntu</maintainer>
   <license>Apache-2.0</license>
 

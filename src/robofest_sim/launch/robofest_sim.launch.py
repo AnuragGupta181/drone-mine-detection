@@ -7,14 +7,13 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    pkg_competition_sim = FindPackageShare('competition_sim')
+    pkg_robofest_sim = FindPackageShare('robofest_sim')
     
-    default_config_path = PathJoinSubstitution([pkg_competition_sim, 'config', 'stage1.yaml'])
-    default_rviz_path = PathJoinSubstitution([pkg_competition_sim, 'rviz', 'competition_sim.rviz'])
-    default_manifest_path = PathJoinSubstitution([pkg_competition_sim, 'worlds', 'generated', 'stage1_manifest.json'])
-    default_world_path = PathJoinSubstitution([pkg_competition_sim, 'worlds', 'generated', 'stage1_seeded.sdf'])
+    default_config_path = PathJoinSubstitution([pkg_robofest_sim, 'config', 'stage1.yaml'])
+    default_rviz_path = PathJoinSubstitution([pkg_robofest_sim, 'rviz', 'robofest_sim.rviz'])
+    default_manifest_path = PathJoinSubstitution([pkg_robofest_sim, 'worlds', 'generated', 'stage1_manifest.json'])
+    default_world_path = PathJoinSubstitution([pkg_robofest_sim, 'worlds', 'generated', 'stage1_seeded.sdf'])
     
-    # Declare Launch Arguments
     config_arg = DeclareLaunchArgument(
         'config_file',
         default_value=default_config_path,
@@ -35,7 +34,7 @@ def generate_launch_description():
 
     # 1. Scenario Generator Node Action
     generate_scenario_cmd = Node(
-        package='competition_sim',
+        package='robofest_sim',
         executable='scenario_generator',
         name='scenario_generator',
         output='screen',
@@ -44,7 +43,7 @@ def generate_launch_description():
 
     # 2. Ground Truth Publisher Node
     ground_truth_node = Node(
-        package='competition_sim',
+        package='robofest_sim',
         executable='ground_truth_publisher',
         name='ground_truth_publisher',
         output='screen',
@@ -57,7 +56,7 @@ def generate_launch_description():
 
     # 3. Mission Evaluator Node
     mission_evaluator_node = Node(
-        package='competition_sim',
+        package='robofest_sim',
         executable='mission_evaluator',
         name='mission_evaluator',
         output='screen',

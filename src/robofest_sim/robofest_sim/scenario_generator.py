@@ -11,7 +11,7 @@ from datetime import datetime
 from collections import deque
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Stage 1 Scenario Generator for Competition Simulation")
+    parser = argparse.ArgumentParser(description="Stage 1 Scenario Generator for Robofest Simulation")
     parser.add_argument("--config", type=str, default="", help="Path to stage1.yaml config file")
     parser.add_argument("--seed", type=int, default=None, help="Random seed override")
     parser.add_argument("--mines", type=int, default=None, help="Mine count override")
@@ -22,10 +22,9 @@ def parse_args():
 
 def load_config(config_path):
     if not config_path:
-        # Default package location search
         possible_paths = [
             os.path.join(os.path.dirname(__file__), "..", "config", "stage1.yaml"),
-            "/home/ubuntu/px4_ros2_ws/src/competition_sim/config/stage1.yaml"
+            "/home/ubuntu/px4_ros2_ws/src/robofest_sim/config/stage1.yaml"
         ]
         for p in possible_paths:
             if os.path.exists(p):
@@ -40,11 +39,7 @@ def load_config(config_path):
         return yaml.safe_load(f)
 
 def check_navigable_corridor(field_length, field_width, mines, obstacles, min_clearance=0.8):
-    """
-    Grid-based BFS connectivity check to ensure at least one navigable path exists 
-    from Start Zone (X=2.5, Y=0.0) to Exit Zone (X=37.5, Y=0.0).
-    """
-    grid_res = 0.5  # 0.5m grid resolution
+    grid_res = 0.5
     x_steps = int(field_length / grid_res)
     y_min, y_max = -field_width / 2.0, field_width / 2.0
     y_steps = int(field_width / grid_res)
@@ -53,20 +48,16 @@ def check_navigable_corridor(field_length, field_width, mines, obstacles, min_cl
     start_gy = int((0.0 - y_min) / grid_res)
     exit_gx = int(37.5 / grid_res)
     
-    # Create grid: True = walkable, False = blocked by obstacle/mine clearance
     grid = [[True for _ in range(y_steps)] for _ in range(x_steps)]
     
     for gx in range(x_steps):
         cx = gx * grid_res
         for gy in range(y_steps):
             cy = y_min + gy * grid_res
-            
-            # Boundary buffer check
             if abs(cy) > (field_width / 2.0 - 0.3):
                 grid[gx][gy] = False
                 continue
                 
-            # Check mines
             for m in mines:
                 dist = math.hypot(cx - m["x"], cy - m["y"])
                 if dist < min_clearance:
@@ -76,23 +67,20 @@ def check_navigable_corridor(field_length, field_width, mines, obstacles, min_cl
             if not grid[gx][gy]:
                 continue
                 
-            # Check obstacles
             for obs in obstacles:
                 dist = math.hypot(cx - obs["x"], cy - obs["y"])
-                if dist < (min_clearance + 0.4): # obstacle radius ~0.4
+                if dist < (min_clearance + 0.4):
                     grid[gx][gy] = False
                     break
 
-    # BFS search from start to any cell in exit zone (gx >= exit_gx)
     queue = deque([(start_gx, start_gy)])
     visited = set([(start_gx, start_gy)])
-    
     directions = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
     
     while queue:
         cx, cy = queue.popleft()
         if cx >= exit_gx:
-            return True # Path found!
+            return True
             
         for dx, dy in directions:
             nx, ny = cx + dx, cy + dy
@@ -101,7 +89,7 @@ def check_navigable_corridor(field_length, field_width, mines, obstacles, min_cl
                     visited.add((nx, ny))
                     queue.append((nx, ny))
                     
-    return False # No valid path found
+    return False
 
 def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_override=None):
     seed = seed_override if seed_override is not None else cfg["scenario"]["seed"]
@@ -119,7 +107,6 @@ def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_over
     
     max_attempts = 200
     valid_layout = False
-    
     mines = []
     obstacles = []
     
@@ -127,7 +114,6 @@ def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_over
         mines = []
         obstacles = []
         
-        # 1. Generate Static Obstacles
         obs_attempts = 0
         while len(obstacles) < num_obstacles and obs_attempts < 500:
             obs_attempts += 1
@@ -142,7 +128,6 @@ def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_over
             if not overlap:
                 obstacles.append({"id": f"obstacle_{len(obstacles)+1}", "x": round(ox, 2), "y": round(oy, 2), "z": 0.0})
                 
-        # 2. Generate Simulated Mines (Traffic Cones)
         mine_attempts = 0
         while len(mines) < num_mines and mine_attempts < 1000:
             mine_attempts += 1
@@ -150,7 +135,6 @@ def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_over
             my = random.uniform(mf_zone["y_min"], mf_zone["y_max"])
             
             overlap = False
-            # Spacing to existing mines
             for prev_m in mines:
                 if math.hypot(mx - prev_m["x"], my - prev_m["y"]) < min_m_spacing:
                     overlap = True
@@ -158,7 +142,6 @@ def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_over
             if overlap:
                 continue
                 
-            # Spacing to obstacles
             for prev_o in obstacles:
                 if math.hypot(mx - prev_o["x"], my - prev_o["y"]) < (min_m_spacing + 0.5):
                     overlap = True
@@ -173,7 +156,6 @@ def generate_scenario(cfg, seed_override=None, mine_override=None, obstacle_over
                 })
 
         if len(mines) == num_mines and len(obstacles) == num_obstacles:
-            # Check corridor connectivity
             if check_navigable_corridor(field_length, field_width, mines, obstacles):
                 valid_layout = True
                 print(f"[scenario_generator] Valid layout generated on attempt {attempt+1} (Seed={seed}).")
@@ -189,8 +171,6 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
         world_sdf = f.read()
 
     sdf_insertions = []
-    
-    # 1. Human Model Inclusion
     sdf_insertions.append(f"""
     <!-- Static Human Model -->
     <include>
@@ -200,7 +180,6 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
     </include>
 """)
 
-    # 2. Obstacle Inclusion
     for obs in obstacles:
         sdf_insertions.append(f"""
     <include>
@@ -210,7 +189,6 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
     </include>
 """)
 
-    # 3. Simulated Mines (Traffic Cones) Inclusion
     for m in mines:
         sdf_insertions.append(f"""
     <include>
@@ -221,8 +199,6 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
 """)
 
     insertion_str = "\n".join(sdf_insertions)
-    
-    # Insert before </world> tag
     world_end_idx = world_sdf.rfind("</world>")
     if world_end_idx != -1:
         final_sdf = world_sdf[:world_end_idx] + insertion_str + "\n  " + world_sdf[world_end_idx:]
@@ -244,8 +220,7 @@ def main():
     
     human_pos = cfg["human"]["start_position"]
     
-    # Build output file paths
-    pkg_dir = "/home/ubuntu/px4_ros2_ws/src/competition_sim"
+    pkg_dir = "/home/ubuntu/px4_ros2_ws/src/robofest_sim"
     base_world_path = os.path.join(pkg_dir, "worlds", "stage1_field.sdf")
     
     out_sdf_path = args.output_sdf if args.output_sdf else os.path.join(pkg_dir, "worlds", "generated", "stage1_seeded.sdf")
@@ -254,14 +229,12 @@ def main():
     os.makedirs(os.path.dirname(out_sdf_path), exist_ok=True)
     os.makedirs(os.path.dirname(out_json_path), exist_ok=True)
     
-    # Generate SDF
     appearance_mode = cfg["scenario"].get("mine_appearance_mode", "easy")
     final_sdf = build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_mode)
     with open(out_sdf_path, "w") as f:
         f.write(final_sdf)
     print(f"[scenario_generator] Exported SDF world to: {out_sdf_path}")
     
-    # Generate Ground Truth Manifest
     manifest = {
         "scenario_id": f"stage1_seed_{seed}_{int(datetime.now().timestamp())}",
         "seed": seed,

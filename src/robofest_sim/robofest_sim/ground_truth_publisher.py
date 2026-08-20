@@ -18,7 +18,7 @@ class GroundTruthPublisher(Node):
         
         manifest_path = self.get_parameter('manifest_path').get_parameter_value().string_value
         if not manifest_path:
-            manifest_path = '/home/ubuntu/px4_ros2_ws/src/competition_sim/worlds/generated/stage1_manifest.json'
+            manifest_path = '/home/ubuntu/px4_ros2_ws/src/robofest_sim/worlds/generated/stage1_manifest.json'
             
         self.frame_id = self.get_parameter('frame_id').get_parameter_value().string_value
         publish_rate = self.get_parameter('publish_rate').get_parameter_value().double_value
@@ -26,14 +26,12 @@ class GroundTruthPublisher(Node):
         self.get_logger().info(f"Loading ground truth manifest from: {manifest_path}")
         self.manifest_data = self.load_manifest(manifest_path)
         
-        # Publishers
         self.mines_pub = self.create_publisher(MarkerArray, '/ground_truth/mines', 10)
         self.obstacles_pub = self.create_publisher(MarkerArray, '/ground_truth/obstacles', 10)
         self.start_zone_pub = self.create_publisher(Marker, '/ground_truth/start_zone', 10)
         self.exit_zone_pub = self.create_publisher(Marker, '/ground_truth/exit_zone', 10)
         self.human_pub = self.create_publisher(PoseStamped, '/ground_truth/human_pose', 10)
         
-        # Timer loop
         self.timer = self.create_timer(1.0 / publish_rate, self.timer_callback)
         self.get_logger().info("GroundTruthPublisher initialized and publishing at 10 Hz.")
 
@@ -58,15 +56,15 @@ class GroundTruthPublisher(Node):
             marker.header = header
             marker.ns = "ground_truth_mines"
             marker.id = idx
-            marker.type = Marker.CYLINDER # Traffic cone visualization
+            marker.type = Marker.CYLINDER
             marker.action = Marker.ADD
             marker.pose.position.x = float(m['position'][0])
             marker.pose.position.y = float(m['position'][1])
             marker.pose.position.z = float(m['position'][2]) + 0.25
-            marker.scale.x = 0.3 # diameter
+            marker.scale.x = 0.3
             marker.scale.y = 0.3
-            marker.scale.z = 0.5 # height
-            marker.color.r = 1.0 # Orange traffic cone color
+            marker.scale.z = 0.5
+            marker.color.r = 1.0
             marker.color.g = 0.4
             marker.color.b = 0.0
             marker.color.a = 0.9

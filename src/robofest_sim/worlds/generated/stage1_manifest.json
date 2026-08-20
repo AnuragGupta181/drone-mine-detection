@@ -1,7 +1,7 @@
 {
-  "scenario_id": "stage1_seed_42_default",
+  "scenario_id": "stage1_seed_42_1787201255",
   "seed": 42,
-  "timestamp": "2026-08-20T00:50:00",
+  "timestamp": "2026-08-20T10:17:35.653906",
   "field": {
     "length": 40.0,
     "width": 10.0,
@@ -40,140 +40,220 @@
     {
       "id": "mine_1",
       "model_type": "traffic_cone",
-      "position": [10.2, 1.5, 0.0],
+      "position": [
+        17.66,
+        -4.23,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_2",
       "model_type": "traffic_cone",
-      "position": [11.8, -2.3, 0.0],
+      "position": [
+        11.56,
+        0.05,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_3",
       "model_type": "traffic_cone",
-      "position": [13.5, 3.1, 0.0],
+      "position": [
+        5.8,
+        -2.71,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_4",
       "model_type": "traffic_cone",
-      "position": [15.0, -0.8, 0.0],
+      "position": [
+        24.5,
+        0.4,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_5",
       "model_type": "traffic_cone",
-      "position": [16.4, 2.0, 0.0],
+      "position": [
+        29.28,
+        -4.44,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_6",
       "model_type": "traffic_cone",
-      "position": [18.1, -3.5, 0.0],
+      "position": [
+        29.17,
+        1.78,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_7",
       "model_type": "traffic_cone",
-      "position": [19.7, 0.5, 0.0],
+      "position": [
+        33.72,
+        -1.47,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_8",
       "model_type": "traffic_cone",
-      "position": [21.2, -1.9, 0.0],
+      "position": [
+        7.78,
+        -3.63,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_9",
       "model_type": "traffic_cone",
-      "position": [22.8, 3.8, 0.0],
+      "position": [
+        30.42,
+        0.93,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_10",
       "model_type": "traffic_cone",
-      "position": [24.0, -2.7, 0.0],
+      "position": [
+        21.09,
+        4.26,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_11",
       "model_type": "traffic_cone",
-      "position": [25.5, 1.2, 0.0],
+      "position": [
+        16.36,
+        0.47,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_12",
       "model_type": "traffic_cone",
-      "position": [26.9, -0.4, 0.0],
+      "position": [
+        26.14,
+        -4.09,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_13",
       "model_type": "traffic_cone",
-      "position": [28.3, 2.5, 0.0],
+      "position": [
+        11.84,
+        -1.9,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_14",
       "model_type": "traffic_cone",
-      "position": [29.6, -3.1, 0.0],
+      "position": [
+        7.39,
+        -2.4,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_15",
       "model_type": "traffic_cone",
-      "position": [30.8, 0.9, 0.0],
+      "position": [
+        24.07,
+        -1.22,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_16",
       "model_type": "traffic_cone",
-      "position": [32.1, -1.8, 0.0],
+      "position": [
+        16.11,
+        -2.61,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_17",
       "model_type": "traffic_cone",
-      "position": [33.4, 3.0, 0.0],
+      "position": [
+        13.01,
+        3.93,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_18",
       "model_type": "traffic_cone",
-      "position": [34.2, -2.5, 0.0],
+      "position": [
+        10.13,
+        2.06,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_19",
       "model_type": "traffic_cone",
-      "position": [8.5, -1.2, 0.0],
+      "position": [
+        9.9,
+        -1.08,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     },
     {
       "id": "mine_20",
       "model_type": "traffic_cone",
-      "position": [7.0, 2.4, 0.0],
+      "position": [
+        34.69,
+        1.26,
+        0.0
+      ],
       "radius": 0.15,
       "clearance_required": 1.0
     }
@@ -181,23 +261,55 @@
   "obstacles": [
     {
       "id": "obstacle_1",
-      "position": [12.0, 0.0, 0.0],
-      "size": [0.8, 0.8, 1.5]
+      "position": [
+        23.63,
+        -3.32,
+        0.0
+      ],
+      "size": [
+        0.8,
+        0.8,
+        1.5
+      ]
     },
     {
       "id": "obstacle_2",
-      "position": [20.0, -2.0, 0.0],
-      "size": [0.8, 0.8, 1.5]
+      "position": [
+        14.15,
+        -1.94,
+        0.0
+      ],
+      "size": [
+        0.8,
+        0.8,
+        1.5
+      ]
     },
     {
       "id": "obstacle_3",
-      "position": [27.0, 1.5, 0.0],
-      "size": [0.8, 0.8, 1.5]
+      "position": [
+        26.15,
+        1.24,
+        0.0
+      ],
+      "size": [
+        0.8,
+        0.8,
+        1.5
+      ]
     },
     {
       "id": "obstacle_4",
-      "position": [33.0, -0.5, 0.0],
-      "size": [0.8, 0.8, 1.5]
+      "position": [
+        30.2,
+        -2.89,
+        0.0
+      ],
+      "size": [
+        0.8,
+        0.8,
+        1.5
+      ]
     }
   ]
 }
