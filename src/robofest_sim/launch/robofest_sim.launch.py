@@ -44,6 +44,12 @@ def generate_launch_description():
         description='Whether to launch slam_toolbox 2D SLAM'
     )
 
+    ext_odom_arg = DeclareLaunchArgument(
+        'ext_odom',
+        default_value='true',
+        description='Whether to launch px4_ext_odom_node for Phase 2.4'
+    )
+
     # 1. Scenario Generator Node Action
     generate_scenario_cmd = Node(
         package='robofest_sim',
@@ -146,10 +152,20 @@ def generate_launch_description():
         arguments=['0.12', '0', '0.26', '0', '0', '0', 'base_link', 'lidar_link']
     )
 
+    # 11. PX4 External Odometry Node (Phase 2.4)
+    px4_ext_odom_node = Node(
+        package='robofest_sim',
+        executable='px4_ext_odom_node',
+        name='px4_ext_odom_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
     return LaunchDescription([
         config_arg,
         seed_arg,
         rviz_arg,
+        ext_odom_arg,
         publish_lidar_tf_arg,
         slam_arg,
         generate_scenario_cmd,
@@ -161,6 +177,7 @@ def generate_launch_description():
         static_map_world_tf,
         rviz_node,
         ros_gz_bridge_node,
-        lidar_static_tf_node
+        lidar_static_tf_node,
+        px4_ext_odom_node
     ])
     

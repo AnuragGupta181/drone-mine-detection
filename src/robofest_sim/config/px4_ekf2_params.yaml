@@ -1,0 +1,9 @@
+# EKF2 External Vision Fusion Configuration — Phase 2.4 Simulation
+EKF2_EV_CTRL: 9         # Bit 0: Horizontal XY Position; Bit 3: Yaw/Heading
+                         # Do NOT enable Bit 1 (vertical) or Bit 2 (velocity): 2D SLAM provides no valid Z or velocity
+EKF2_HGT_REF: 2         # Height reference: 2 = Rangefinder (indoor sim baseline)
+                         # NOTE: Configurable for hardware validation (e.g., baro, GPS)
+EKF2_EV_DELAY: 50.0     # [ms] INITIAL tunable simulation value; refine via innovation analysis
+EKF2_EVP_NOISE: 0.05    # [m] Lower bound on EV position noise (Mode 0: message covariance used; this is the floor)
+EKF2_EVA_NOISE: 0.05    # [rad] Lower bound on EV attitude noise (Mode 0: message covariance used; this is the floor)
+EKF2_EV_NOISE_MD: 0     # Mode 0: use message-provided covariance, with above params as lower bounds

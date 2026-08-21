@@ -43,6 +43,7 @@ setup(
             'scenario_generator = robofest_sim.scenario_generator:main',
             'sensor_health_monitor = robofest_sim.sensor_health_monitor:main',
             'sim_tf_publisher = robofest_sim.sim_tf_publisher:main',
+            'px4_ext_odom_node = robofest_sim.px4_ext_odom_node:main',
         ],
     },
 )
