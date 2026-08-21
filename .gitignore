@@ -23,3 +23,6 @@ venv/
 # Temporary & Log files
 *.log
 *.tmp
+
+# Third-party cloned packages
+src/ros_gz/

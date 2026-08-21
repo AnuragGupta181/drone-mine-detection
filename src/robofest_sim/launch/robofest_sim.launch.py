@@ -92,7 +92,8 @@ def generate_launch_description():
         package='robofest_sim',
         executable='sim_tf_publisher',
         name='sim_tf_publisher',
-        output='screen'
+        output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
     # 6. 2D LiDAR SLAM Toolbox Node (Phase 2.3)
@@ -120,7 +121,29 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', default_rviz_path]
+        arguments=['-d', default_rviz_path],
+        parameters=[{'use_sim_time': True}]
+    )
+
+    # 9. ROS-Gazebo Bridge (LiDAR Scan)
+    ros_gz_bridge_node = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='ros_gz_bridge',
+        output='screen',
+        arguments=[
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'
+        ]
+    )
+
+    # 10. Static TF: base_link -> lidar_link (x500_lidar_2d offset: z=0.26, x=0.12)
+    lidar_static_tf_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='lidar_static_tf',
+        output='screen',
+        arguments=['0.12', '0', '0.26', '0', '0', '0', 'base_link', 'lidar_link']
     )
 
     return LaunchDescription([
@@ -136,5 +159,8 @@ def generate_launch_description():
         sim_tf_node,
         slam_toolbox_node,
         static_map_world_tf,
-        rviz_node
+        rviz_node,
+        ros_gz_bridge_node,
+        lidar_static_tf_node
     ])
+    
