@@ -205,6 +205,118 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
     </include>
 """)
 
+    # Inject the user's requested trees
+    sdf_insertions.append("""
+    <!-- 1. Mountain Pine Tree (4.5m Tall Coniferous Mountain Tree at X=18.0, Y=2.0) -->
+    <model name="mountain_pine_tree">
+      <static>true</static>
+      <pose>18.0 2.0 0.0 0 0 0</pose>
+      <link name="pine_link">
+        <pose>0 0 2.25 0 0 0</pose>
+        <collision name="trunk_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>4.5</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="trunk_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>4.5</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.3 0.2 0.1 1.0</ambient>
+            <diffuse>0.3 0.2 0.1 1.0</diffuse>
+          </material>
+        </visual>
+        <visual name="pine_tier1">
+          <pose>0 0 0.2 0 0 0</pose>
+          <geometry>
+            <cone>
+              <radius>1.5</radius>
+              <length>2.2</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>0.05 0.35 0.15 1.0</ambient>
+            <diffuse>0.05 0.35 0.15 1.0</diffuse>
+          </material>
+        </visual>
+        <visual name="pine_tier2">
+          <pose>0 0 1.0 0 0 0</pose>
+          <geometry>
+            <cone>
+              <radius>1.1</radius>
+              <length>1.8</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>0.08 0.45 0.18 1.0</ambient>
+            <diffuse>0.08 0.45 0.18 1.0</diffuse>
+          </material>
+        </visual>
+        <visual name="pine_tier3">
+          <pose>0 0 1.7 0 0 0</pose>
+          <geometry>
+            <cone>
+              <radius>0.7</radius>
+              <length>1.3</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>0.1 0.5 0.2 1.0</ambient>
+            <diffuse>0.1 0.5 0.2 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 2. Tall Mountain Poplar Tree (5.0m Tall Tree at X=23.0, Y=-2.0) -->
+    <model name="tall_mountain_tree">
+      <static>true</static>
+      <pose>23.0 -2.0 0.0 0 0 0</pose>
+      <link name="tree_link">
+        <pose>0 0 2.5 0 0 0</pose>
+        <collision name="trunk_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.25</radius>
+              <length>5.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="trunk_visual">
+          <geometry>
+            <cylinder>
+              <radius>0.25</radius>
+              <length>5.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.35 0.22 0.12 1.0</ambient>
+            <diffuse>0.35 0.22 0.12 1.0</diffuse>
+          </material>
+        </visual>
+        <visual name="foliage_visual">
+          <pose>0 0 1.2 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>1.5</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.15 0.55 0.2 1.0</ambient>
+            <diffuse>0.15 0.55 0.2 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    """)
+
     insertion_str = "\n".join(sdf_insertions)
     world_end_idx = world_sdf.rfind("</world>")
     if world_end_idx != -1:

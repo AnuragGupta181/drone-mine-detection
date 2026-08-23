@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-position_hold_node.py — Phase 2.5 GPS-Denied Position Hold Mission
+position_hold_node.py — Phase 2.5 GPS-Denied Obstacle Avoidance Mission
 
-Executes a rigid state machine to validate GPS-denied position hold performance.
-Reads EKF2 readiness, arms cleanly, performs a hover-move-hover-return sequence,
-and logs comprehensive drift metrics.
+Executes a rigid state machine to validate GPS-denied flight.
+Reads EKF2 readiness, arms cleanly, takes off to 2.5m, flies through waypoints
+to avoid trees, holds position at the blue box, and lands.
 """
 
 import math
@@ -83,6 +83,25 @@ class PositionHoldNode(Node):
         self.drift_trackers = {}
         self.current_tracker = None
 
+        # Waypoints in PX4 LOCAL NED frame (X=North, Y=East from home)
+        # Gazebo ENU: field runs along Gazebo X (East). Drone spawns at Gazebo (4.5, 0).
+        # PX4 NED X = Gazebo Y (North, cross-field direction)
+        # PX4 NED Y = Gazebo X - 4.5 (East, along the field length)
+        #
+        # Gazebo positions:  (X=18,Y=+2) = Tree1,  (X=23,Y=-2) = Tree2
+        # Blue box center at Gazebo X=37.5, Y=0
+        #
+        # Formula: px4_x = gazebo_y, px4_y = gazebo_x - 4.5 (home offset)
+        self.waypoints = [
+            (0.0,  9.5),   # WP 0: Approach  — Gazebo (14.0,  0.0)
+            (-2.5, 13.5),  # WP 1: Round Tree1 — Gazebo (18.0, -2.5) [tree at Y=+2]
+            (0.0,  16.0),  # WP 2: Mid field  — Gazebo (20.5,  0.0) — HOLD HERE
+            (2.5,  18.5),  # WP 3: Round Tree2 — Gazebo (23.0, +2.5) [tree at Y=-2]
+            (0.0,  33.0),  # WP 4: Blue box   — Gazebo (37.5,  0.0)
+        ]
+        self.current_wp_idx = 0
+        self.flight_altitude = -2.5
+
         self.get_logger().info("Position Hold Mission Node Started. Awaiting EKF2 Readiness...")
         self.timer = self.create_timer(0.1, self.timer_callback)
 
@@ -99,8 +118,7 @@ class PositionHoldNode(Node):
         self.current_z = msg.z
         
         if self.current_tracker is not None:
-            # Only track if Z is relatively stable (we're not currently climbing/descending heavily)
-            if self.state in ["HOLD", "HOLD_NORTH"]:
+            if self.state in ["HOLD_END", "HOLD_MID"]:
                 self.current_tracker.add_sample(self.get_clock().now().nanoseconds / 1e9, self.current_x, self.current_y)
 
     def publish_offboard_control_mode(self):
@@ -119,7 +137,7 @@ class PositionHoldNode(Node):
         msg.position = [float(x), float(y), float(z)]
         msg.velocity = [float('nan'), float('nan'), float('nan')]
         msg.acceleration = [float('nan'), float('nan'), float('nan')]
-        msg.yaw = 0.0
+        msg.yaw = float('nan') # Let the drone decide heading based on velocity
         self.trajectory_pub.publish(msg)
 
     def send_vehicle_command(self, command, param1=0.0, param2=0.0):
@@ -145,20 +163,16 @@ class PositionHoldNode(Node):
         if self.state not in ["LAND", "DONE"]:
             self.publish_offboard_control_mode()
 
-        # Dynamic spawn pose tracking
+        # Home tracking in PX4 NED frame (starts at 0,0 from PX4 home)
         if not hasattr(self, 'home_x'):
-            self.home_x = self.current_x if self.current_x != 0.0 else 4.5
-            self.home_y = self.current_y
-
-        target_x = self.home_x
-        target_y = self.home_y
+            self.home_x = 0.0  # PX4 NED X at spawn = 0 (North from home)
+            self.home_y = 0.0  # PX4 NED Y at spawn = 0 (East from home)
 
         if self.state in ["WARMUP", "ARM"]:
-            # Lock home position once valid reading arrives
-            if self.current_x != 0.0:
-                self.home_x = self.current_x
-                self.home_y = self.current_y
-            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
+            # Keep home locked at origin; don't drift track during warmup
+            pass
+            self.publish_trajectory_setpoint(self.home_x, self.home_y, self.flight_altitude)
+            
             if self.state == "WARMUP":
                 if self.ekf2_ready or self.state_timer > 30:
                     self.transition_to("ARM")
@@ -172,7 +186,7 @@ class PositionHoldNode(Node):
                     if self.state_timer % 10 == 0:
                         attempts = self.state_timer // 10
                         if attempts > 3:
-                            self.get_logger().error("Failed to arm cleanly after 3 attempts. Aborting.")
+                            self.get_logger().error("Failed to arm cleanly. Aborting.")
                             self.transition_to("DONE")
                         else:
                             self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0, 0.0)
@@ -181,46 +195,57 @@ class PositionHoldNode(Node):
                 self.state_timer += 1
 
         elif self.state == "TAKEOFF":
-            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
-            if abs(self.current_z - (-2.0)) < 0.15:
-                if self.state_timer > 20:
-                    self.current_tracker = DriftTracker(self.home_x, self.home_y)
-                    self.drift_trackers["HOLD_1"] = self.current_tracker
-                    self.transition_to("HOLD")
+            self.publish_trajectory_setpoint(self.home_x, self.home_y, self.flight_altitude)
+            if abs(self.current_z - (self.flight_altitude)) < 0.25:
+                # Hold at the start zone (greenbox) for 7 seconds
+                if self.state_timer > 70:
+                    self.transition_to("NAVIGATE")
                 self.state_timer += 1
             else:
                 self.state_timer = 0
 
-        elif self.state == "HOLD":
-            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
+        elif self.state == "NAVIGATE":
+            if self.current_wp_idx >= len(self.waypoints):
+                self.transition_to("HOLD_END")
+                return
+                
+            target_x, target_y = self.waypoints[self.current_wp_idx]
+            self.publish_trajectory_setpoint(target_x, target_y, self.flight_altitude)
+            
+            dist = math.sqrt((self.current_x - target_x)**2 + (self.current_y - target_y)**2)
+            if dist < 0.6:
+                self.get_logger().info(f"Reached Waypoint {self.current_wp_idx + 1}")
+                self.current_wp_idx += 1
+                
+                # Check if we just reached the middle waypoint (WP 2)
+                if self.current_wp_idx == 3:
+                    self.transition_to("HOLD_MID")
+
+        elif self.state == "HOLD_MID":
+            # Hold at the middle waypoint (WP 2)
+            target_x, target_y = self.waypoints[2]
+            self.publish_trajectory_setpoint(target_x, target_y, self.flight_altitude)
+            
+            if self.state_timer == 0:
+                self.current_tracker = DriftTracker(target_x, target_y)
+                self.drift_trackers["HOLD_MID"] = self.current_tracker
+                
             self.state_timer += 1
-            if self.state_timer >= 300:
+            if self.state_timer >= 70: # Hold for 7 seconds in the middle
                 self.current_tracker = None
-                self.transition_to("MOVE_NORTH")
+                self.transition_to("NAVIGATE")
 
-        elif self.state == "MOVE_NORTH":
-            move_x = self.home_x + 1.5
-            self.publish_trajectory_setpoint(move_x, self.home_y, -2.0)
+        elif self.state == "HOLD_END":
+            target_x, target_y = self.waypoints[-1]
+            self.publish_trajectory_setpoint(target_x, target_y, self.flight_altitude)
+            
+            if self.state_timer == 0:
+                self.current_tracker = DriftTracker(target_x, target_y)
+                self.drift_trackers["HOLD_END"] = self.current_tracker
+                
             self.state_timer += 1
-            dist = math.sqrt((self.current_x - move_x)**2 + (self.current_y - self.home_y)**2)
-            if dist < 0.3 or self.state_timer >= 150:
-                self.current_tracker = DriftTracker(move_x, self.home_y)
-                self.drift_trackers["HOLD_NORTH"] = self.current_tracker
-                self.transition_to("HOLD_NORTH")
-
-        elif self.state == "HOLD_NORTH":
-            move_x = self.home_x + 1.5
-            self.publish_trajectory_setpoint(move_x, self.home_y, -2.0)
-            self.state_timer += 1
-            if self.state_timer >= 150:
+            if self.state_timer >= 100: # Hold for 10 seconds before landing
                 self.current_tracker = None
-                self.transition_to("RETURN")
-
-        elif self.state == "RETURN":
-            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
-            self.state_timer += 1
-            dist = math.sqrt((self.current_x - self.home_x)**2 + (self.current_y - self.home_y)**2)
-            if dist < 0.3 or self.state_timer >= 150:
                 self.transition_to("LAND")
 
         elif self.state == "LAND":
@@ -232,12 +257,11 @@ class PositionHoldNode(Node):
                 self.transition_to("DONE")
 
         elif self.state == "DONE":
-            self.get_logger().info("=== Phase 2.5 Mission Report ===")
-            if "HOLD_1" in self.drift_trackers:
-                self.get_logger().info(f"Initial 30s Hold Drift: {self.drift_trackers['HOLD_1'].generate_report()}")
-            if "HOLD_NORTH" in self.drift_trackers:
-                self.get_logger().info(f"North 15s Hold Drift: {self.drift_trackers['HOLD_NORTH'].generate_report()}")
-            self.get_logger().info("================================")
+            self.get_logger().info("=== Phase 2.5 Mission Complete ===")
+            if "HOLD_MID" in self.drift_trackers:
+                self.get_logger().info(f"Mid Hold Drift: {self.drift_trackers['HOLD_MID'].generate_report()}")
+            if "HOLD_END" in self.drift_trackers:
+                self.get_logger().info(f"End Hold Drift: {self.drift_trackers['HOLD_END'].generate_report()}")
             self.timer.cancel()
 
 

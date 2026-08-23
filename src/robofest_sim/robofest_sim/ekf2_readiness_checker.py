@@ -43,10 +43,10 @@ class EKF2ReadinessChecker(Node):
     def status_callback(self, msg):
         self.last_flags = msg
 
-        # Evaluate Readiness Criteria (Supports both GPS presentation mode and EV mode)
+        # Readiness: tilt + yaw aligned, position from GPS or EV, no faults
         tilt_ok = msg.cs_tilt_align
         yaw_ok = msg.cs_yaw_align
-        has_pos = msg.cs_gnss_pos or msg.cs_ev_pos
+        has_pos = msg.cs_gnss_pos or msg.cs_ev_pos   # either GPS or SLAM
         no_hdg_fault = not msg.fs_bad_hdg
         no_fake_pos = not msg.cs_fake_pos
 
@@ -59,21 +59,21 @@ class EKF2ReadinessChecker(Node):
 
     def timer_callback(self):
         if self.last_flags is None:
-            self.get_logger().info("Waiting for EKF2 telemetry...")
+            self.get_logger().info("Waiting for EKF2 telemetry from PX4...")
             return
 
         if self.is_ready:
-            self.get_logger().info("EKF2 is READY for GPS-Denied Flight.", once=True)
+            self.get_logger().info("EKF2 is READY for flight.", once=True)
         else:
+            f = self.last_flags
             self.get_logger().warn(
                 f"EKF2 NOT READY: "
-                f"tilt_align={self.last_flags.cs_tilt_align}, "
-                f"yaw_align={self.last_flags.cs_yaw_align}, "
-                f"ev_pos={self.last_flags.cs_ev_pos}, "
-                f"ev_yaw={self.last_flags.cs_ev_yaw}, "
-                f"gnss_pos={self.last_flags.cs_gnss_pos} (must be False), "
-                f"bad_hdg_fault={self.last_flags.fs_bad_hdg} (must be False), "
-                f"fake_pos={self.last_flags.cs_fake_pos} (must be False)"
+                f"tilt_align={f.cs_tilt_align}, "
+                f"yaw_align={f.cs_yaw_align}, "
+                f"gnss_pos={f.cs_gnss_pos}, "
+                f"ev_pos={f.cs_ev_pos}, "
+                f"bad_hdg={f.fs_bad_hdg}, "
+                f"fake_pos={f.cs_fake_pos}"
             )
 
 def main(args=None):
