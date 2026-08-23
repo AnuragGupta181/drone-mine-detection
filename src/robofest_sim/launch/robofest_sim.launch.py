@@ -161,6 +161,15 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]
     )
 
+    # 12. EKF2 Readiness Checker (Phase 2.5)
+    ekf2_readiness_checker_node = Node(
+        package='robofest_sim',
+        executable='ekf2_readiness_checker',
+        name='ekf2_readiness_checker',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
     return LaunchDescription([
         config_arg,
         seed_arg,
@@ -178,6 +187,7 @@ def generate_launch_description():
         rviz_node,
         ros_gz_bridge_node,
         lidar_static_tf_node,
-        px4_ext_odom_node
+        px4_ext_odom_node,
+        ekf2_readiness_checker_node
     ])
     

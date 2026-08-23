@@ -553,12 +553,13 @@ The architecture defines measurable metrics:
 **Status: COMPLETE**
 
 #### Phase 2.4 — External Odometry & PX4 EKF2 Integration
-* `nav_msgs/msg/Odometry`.
-* ENU/FLU -> NED/FRD.
-* `VehicleOdometry`.
-* `/fmu/in/vehicle_visual_odometry`.
-* EKF2 external-odometry fusion.
-* Estimator health monitoring.
+* `px4_ext_odom_node` (`map -> base_link` TF conversion).
+* ENU/FLU -> NED/FRD rigid matrix transformations.
+* `VehicleOdometry` microsecond timestamp & schema formatting.
+* `/fmu/in/vehicle_visual_odometry` bridge.
+* EKF2 External Vision fusion (`EKF2_EV_CTRL=9`, `EKF2_HGT_REF=2`).
+* Estimator health & innovation monitoring (`ev_hpos` innovations < 3mm).
+**Status: COMPLETE**
 
 #### Phase 2.5 — GPS-Denied Position Hold
 * Autonomous takeoff.

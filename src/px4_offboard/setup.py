@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'offboard_control = px4_offboard.offboard_control_node:main',
+            'position_hold_node = px4_offboard.position_hold_node:main',
         ],
     },
 )

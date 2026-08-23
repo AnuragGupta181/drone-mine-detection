@@ -99,6 +99,12 @@ class OffboardControlNode(Node):
             return
 
         # 3. State Machine based on telemetry feedback
+        if getattr(self, 'is_landing', False):
+            if self.arming_state == VehicleStatus.ARMING_STATE_DISARMED and self.armed_counter > 200:
+                self.get_logger().info("Autonomous Flight & Landing Complete! Mission successful.")
+                self.timer.cancel()
+            return
+
         if self.nav_state != VehicleStatus.NAVIGATION_STATE_OFFBOARD:
             if self.offboard_counter % 10 == 0:
                 self.get_logger().info("Requesting OFFBOARD mode...")
@@ -123,6 +129,7 @@ class OffboardControlNode(Node):
 
             if self.armed_counter == 200:  # 20 seconds hover
                 self.get_logger().info("20s hover in front of human complete. Initiating Autonomous Landing...")
+                self.is_landing = True
                 self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_LAND)
 
         self.offboard_counter += 1
