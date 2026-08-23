@@ -43,17 +43,14 @@ class EKF2ReadinessChecker(Node):
     def status_callback(self, msg):
         self.last_flags = msg
 
-        # Evaluate Readiness Criteria
+        # Evaluate Readiness Criteria (Supports both GPS presentation mode and EV mode)
         tilt_ok = msg.cs_tilt_align
         yaw_ok = msg.cs_yaw_align
-        ev_pos_ok = msg.cs_ev_pos
-        ev_yaw_ok = msg.cs_ev_yaw
-        gps_off = not msg.cs_gnss_pos
+        has_pos = msg.cs_gnss_pos or msg.cs_ev_pos
         no_hdg_fault = not msg.fs_bad_hdg
         no_fake_pos = not msg.cs_fake_pos
 
-        self.is_ready = (tilt_ok and yaw_ok and ev_pos_ok and ev_yaw_ok and 
-                         gps_off and no_hdg_fault and no_fake_pos)
+        self.is_ready = (tilt_ok and yaw_ok and has_pos and no_hdg_fault and no_fake_pos)
 
         # Publish the state
         ready_msg = Bool()

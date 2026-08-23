@@ -112,13 +112,13 @@ def generate_launch_description():
         parameters=[slam_params_path]
     )
 
-    # 7. Static Map -> World TF Publisher (Syncs RViz ground truth markers in world frame with map frame)
+    # 7. Static World -> Map TF Publisher (Syncs RViz ground truth markers in world frame with map frame)
     static_map_world_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_map_world_tf',
         output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', 'map', 'world']
+        arguments=['4.5', '0', '0', '0', '0', '0', 'world', 'map']
     )
 
     # 8. RViz2 Node
@@ -139,7 +139,9 @@ def generate_launch_description():
         output='screen',
         arguments=[
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/model/x500_lidar_2d/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/model/x500_lidar_2d_0/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry'
         ]
     )
 

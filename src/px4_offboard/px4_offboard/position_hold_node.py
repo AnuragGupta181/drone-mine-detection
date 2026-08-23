@@ -145,39 +145,46 @@ class PositionHoldNode(Node):
         if self.state not in ["LAND", "DONE"]:
             self.publish_offboard_control_mode()
 
-        if self.state == "WARMUP":
-            self.publish_trajectory_setpoint(4.5, 0.0, -2.0)
-            if self.ekf2_ready:
-                self.transition_to("ARM")
-            else:
-                self.state_timer += 1
-                if self.state_timer >= self.warmup_timeout:
-                    self.get_logger().error("EKF2 alignment timed out. Aborting mission.")
-                    self.transition_to("DONE")
+        # Dynamic spawn pose tracking
+        if not hasattr(self, 'home_x'):
+            self.home_x = self.current_x if self.current_x != 0.0 else 4.5
+            self.home_y = self.current_y
 
-        elif self.state == "ARM":
-            self.publish_trajectory_setpoint(4.5, 0.0, -2.0)
-            if self.nav_state != VehicleStatus.NAVIGATION_STATE_OFFBOARD:
-                if self.state_timer % 10 == 0:
-                    self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1.0, 6.0)
-            elif self.arming_state != VehicleStatus.ARMING_STATE_ARMED:
-                if self.state_timer % 10 == 0:
-                    attempts = self.state_timer // 10
-                    if attempts > 3:
-                        self.get_logger().error("Failed to arm cleanly after 3 attempts. Aborting.")
-                        self.transition_to("DONE")
-                    else:
-                        self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0, 0.0)
-            else:
-                self.transition_to("TAKEOFF")
-            self.state_timer += 1
+        target_x = self.home_x
+        target_y = self.home_y
+
+        if self.state in ["WARMUP", "ARM"]:
+            # Lock home position once valid reading arrives
+            if self.current_x != 0.0:
+                self.home_x = self.current_x
+                self.home_y = self.current_y
+            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
+            if self.state == "WARMUP":
+                if self.ekf2_ready or self.state_timer > 30:
+                    self.transition_to("ARM")
+                else:
+                    self.state_timer += 1
+            elif self.state == "ARM":
+                if self.nav_state != VehicleStatus.NAVIGATION_STATE_OFFBOARD:
+                    if self.state_timer % 10 == 0:
+                        self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1.0, 6.0)
+                elif self.arming_state != VehicleStatus.ARMING_STATE_ARMED:
+                    if self.state_timer % 10 == 0:
+                        attempts = self.state_timer // 10
+                        if attempts > 3:
+                            self.get_logger().error("Failed to arm cleanly after 3 attempts. Aborting.")
+                            self.transition_to("DONE")
+                        else:
+                            self.send_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0, 0.0)
+                else:
+                    self.transition_to("TAKEOFF")
+                self.state_timer += 1
 
         elif self.state == "TAKEOFF":
-            self.publish_trajectory_setpoint(4.5, 0.0, -2.0)
-            # Check if altitude is within 0.15m of target (-2.0)
+            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
             if abs(self.current_z - (-2.0)) < 0.15:
-                if self.state_timer > 20: # Must be stable for 2 seconds
-                    self.current_tracker = DriftTracker(4.5, 0.0)
+                if self.state_timer > 20:
+                    self.current_tracker = DriftTracker(self.home_x, self.home_y)
                     self.drift_trackers["HOLD_1"] = self.current_tracker
                     self.transition_to("HOLD")
                 self.state_timer += 1
@@ -185,32 +192,34 @@ class PositionHoldNode(Node):
                 self.state_timer = 0
 
         elif self.state == "HOLD":
-            self.publish_trajectory_setpoint(4.5, 0.0, -2.0)
+            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
             self.state_timer += 1
-            if self.state_timer >= 300: # 30 seconds
+            if self.state_timer >= 300:
                 self.current_tracker = None
                 self.transition_to("MOVE_NORTH")
 
         elif self.state == "MOVE_NORTH":
-            self.publish_trajectory_setpoint(6.0, 0.0, -2.0)
+            move_x = self.home_x + 1.5
+            self.publish_trajectory_setpoint(move_x, self.home_y, -2.0)
             self.state_timer += 1
-            dist = math.sqrt((self.current_x - 6.0)**2 + (self.current_y - 0.0)**2)
+            dist = math.sqrt((self.current_x - move_x)**2 + (self.current_y - self.home_y)**2)
             if dist < 0.3 or self.state_timer >= 150:
-                self.current_tracker = DriftTracker(6.0, 0.0)
+                self.current_tracker = DriftTracker(move_x, self.home_y)
                 self.drift_trackers["HOLD_NORTH"] = self.current_tracker
                 self.transition_to("HOLD_NORTH")
 
         elif self.state == "HOLD_NORTH":
-            self.publish_trajectory_setpoint(6.0, 0.0, -2.0)
+            move_x = self.home_x + 1.5
+            self.publish_trajectory_setpoint(move_x, self.home_y, -2.0)
             self.state_timer += 1
-            if self.state_timer >= 150: # 15 seconds
+            if self.state_timer >= 150:
                 self.current_tracker = None
                 self.transition_to("RETURN")
 
         elif self.state == "RETURN":
-            self.publish_trajectory_setpoint(4.5, 0.0, -2.0)
+            self.publish_trajectory_setpoint(self.home_x, self.home_y, -2.0)
             self.state_timer += 1
-            dist = math.sqrt((self.current_x - 4.5)**2 + (self.current_y - 0.0)**2)
+            dist = math.sqrt((self.current_x - self.home_x)**2 + (self.current_y - self.home_y)**2)
             if dist < 0.3 or self.state_timer >= 150:
                 self.transition_to("LAND")
 

@@ -24,8 +24,8 @@ slam_toolbox:
 
     # Grid & Processing Parameters
     resolution: 0.05            # 5 cm per cell
-    max_laser_range: 20.0       # Max LiDAR range (meters)
-    minimum_time_interval: 0.1  # Process scans at ~10 Hz
+    max_laser_range: 12.0       # Truncate distant rays (prevents floor ground-plane streaks)
+    minimum_time_interval: 0.15 # Process scans cleanly at ~6.6 Hz
     transform_timeout: 0.2
     tf_buffer_duration: 30.0
     stack_size_to_use: 40000000
@@ -34,11 +34,11 @@ slam_toolbox:
     # Scan Matcher Parameters
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.1
-    minimum_travel_heading: 0.05
-    scan_buffer_size: 10
+    minimum_travel_distance: 0.25  # Only add scan when drone moves 25cm (prevents double-lines)
+    minimum_travel_heading: 0.15   # Only add scan when drone rotates 8.5 deg
+    scan_buffer_size: 15
     scan_buffer_maximum_scan_distance: 10.0
-    link_match_minimum_response_fine: 0.1
+    link_match_minimum_response_fine: 0.55
     link_scan_maximum_distance: 1.5
 
     # Loop Closure Parameters
