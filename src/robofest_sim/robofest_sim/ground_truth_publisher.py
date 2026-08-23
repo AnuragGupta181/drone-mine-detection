@@ -74,14 +74,14 @@ class GroundTruthPublisher(Node):
             marker.action = Marker.ADD
             marker.pose.position.x = float(m['position'][0])
             marker.pose.position.y = float(m['position'][1])
-            marker.pose.position.z = float(m['position'][2]) + 0.25
+            marker.pose.position.z = float(m['position'][2]) + 0.05
             marker.pose.orientation.w = 1.0
             marker.scale.x = 0.3
             marker.scale.y = 0.3
-            marker.scale.z = 0.5
-            marker.color.r = 1.0
-            marker.color.g = 0.4
-            marker.color.b = 0.0
+            marker.scale.z = 0.1
+            marker.color.r = 0.8
+            marker.color.g = 0.1
+            marker.color.b = 0.1
             marker.color.a = 0.9
             mine_array.markers.append(marker)
         self.mines_pub.publish(mine_array)

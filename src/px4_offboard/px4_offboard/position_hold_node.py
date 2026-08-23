@@ -100,7 +100,7 @@ class PositionHoldNode(Node):
             (0.0,  33.0),  # WP 4: Blue box   — Gazebo (37.5,  0.0)
         ]
         self.current_wp_idx = 0
-        self.flight_altitude = -2.5
+        self.flight_altitude = -1.2
 
         self.get_logger().info("Position Hold Mission Node Started. Awaiting EKF2 Readiness...")
         self.timer = self.create_timer(0.1, self.timer_callback)
@@ -197,8 +197,8 @@ class PositionHoldNode(Node):
         elif self.state == "TAKEOFF":
             self.publish_trajectory_setpoint(self.home_x, self.home_y, self.flight_altitude)
             if abs(self.current_z - (self.flight_altitude)) < 0.25:
-                # Hold at the start zone (greenbox) for 7 seconds
-                if self.state_timer > 70:
+                # Hold at the start zone (greenbox) for 4 seconds
+                if self.state_timer > 40:
                     self.transition_to("NAVIGATE")
                 self.state_timer += 1
             else:
@@ -231,7 +231,7 @@ class PositionHoldNode(Node):
                 self.drift_trackers["HOLD_MID"] = self.current_tracker
                 
             self.state_timer += 1
-            if self.state_timer >= 70: # Hold for 7 seconds in the middle
+            if self.state_timer >= 40: # Hold for 4 seconds in the middle
                 self.current_tracker = None
                 self.transition_to("NAVIGATE")
 
@@ -244,7 +244,7 @@ class PositionHoldNode(Node):
                 self.drift_trackers["HOLD_END"] = self.current_tracker
                 
             self.state_timer += 1
-            if self.state_timer >= 100: # Hold for 10 seconds before landing
+            if self.state_timer >= 40: # Hold for 4 seconds before landing
                 self.current_tracker = None
                 self.transition_to("LAND")
 

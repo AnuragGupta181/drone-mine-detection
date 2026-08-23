@@ -198,11 +198,46 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
 
     for m in mines:
         sdf_insertions.append(f"""
-    <include>
-      <uri>model://traffic_cone</uri>
-      <name>{m['id']}</name>
+    <model name="{m['id']}">
+      <static>true</static>
       <pose>{m['x']} {m['y']} {m['z']} 0 0 0</pose>
-    </include>
+      <link name="link">
+        <pose>0 0 0.05 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.15</radius>
+              <length>0.1</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual_base">
+          <geometry>
+            <cylinder>
+              <radius>0.15</radius>
+              <length>0.1</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.8 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+        <visual name="visual_top">
+          <pose>0 0 0.055 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
 """)
 
     # Inject the user's requested trees
