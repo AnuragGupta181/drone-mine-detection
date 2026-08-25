@@ -407,7 +407,14 @@ class SwarmMissionNode(Node):
         self.create_subscription(Bool, '/ekf2_ready', self._ekf2_cb, 10)
 
         # Publisher to notify when at least 2 scouts have landed
-        self.scouts_done_pub = self.create_publisher(Bool, '/mission/scouts_done', qos)
+        # Use RELIABLE+TRANSIENT_LOCAL so safe_path_planner always receives it
+        _reliable_qos = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=5,
+        )
+        self.scouts_done_pub = self.create_publisher(Bool, '/mission/scouts_done', _reliable_qos)
 
         self.get_logger().info(
             f"SwarmMissionNode started — {len(self.drones)} scouts + 1 verifier. "

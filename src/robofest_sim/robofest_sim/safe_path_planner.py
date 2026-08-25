@@ -260,8 +260,15 @@ class SafePathPlannerNode(Node):
         self._latest_verdict: Optional[str] = None
 
         # Subscribe to scouts_done to reveal minefield + human path
+        # Must match publisher QoS (RELIABLE + TRANSIENT_LOCAL)
+        _reliable_qos = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=5,
+        )
         self.scouts_done_sub = self.create_subscription(
-            Bool, '/mission/scouts_done', self._scouts_done_cb, 10)
+            Bool, '/mission/scouts_done', self._scouts_done_cb, _reliable_qos)
         self.show_mines = False    # True once >=2 scouts land: reveal mines & drone paths
         self.show_paths = False    # same gate — drone paths shown at the same time
 

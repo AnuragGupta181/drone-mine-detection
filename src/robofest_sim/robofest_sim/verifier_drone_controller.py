@@ -168,7 +168,7 @@ class VerifierDroneController:
 
         # ── Human path subscriber (from safe_path_planner) ────────────────────
         plan_qos = QoSProfile(
-            reliability=ReliabilityPolicy.RELIABLE,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.TRANSIENT_LOCAL,
             history=HistoryPolicy.KEEP_LAST,
             depth=5)
@@ -434,12 +434,24 @@ class VerifierDroneController:
 
         # ── WAIT_SCOUTS ───────────────────────────────────────────────────────
         if self._state == _VState.WAIT_SCOUTS:
-            if scouts_all_done and self._human_wps_ned:
-                self._log("All scouts DONE and human path received — beginning verification.")
-                self._verdicts = []
-                self._wp_idx   = 0
-                self._transition(_VState.ARM)
-            elif self._timer % 50 == 0:
+            if scouts_all_done:
+                # Fallback: Hardcode a straight path if 120s elapsed and no path received
+                if not self._human_wps_ned and self._timer >= 1200:
+                    self._log("Fallback: 120s timeout reached without path. Generating hardcoded straight path.", "warn")
+                    # Straight path down the middle lane
+                    fallback_world = [(5.0, 0.0), (15.0, 0.0), (25.0, 0.0), (35.0, 0.0)]
+                    self._human_wps_world = fallback_world
+                    # Convert to NED (Spawn: 2.5, 1.0)
+                    self._human_wps_ned = [(wy - 1.0, wx - 2.5) for (wx, wy) in fallback_world]
+                
+                if self._human_wps_ned:
+                    self._log("All scouts DONE and path ready — beginning verification.")
+                    self._verdicts = []
+                    self._wp_idx   = 0
+                    self._transition(_VState.ARM)
+                    return
+
+            if self._timer % 50 == 0:
                 self._log(
                     f"Waiting... scouts_done={scouts_all_done} "
                     f"path_wps={len(self._human_wps_ned)} ({self._timer//10}s)",
