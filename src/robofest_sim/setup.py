@@ -45,6 +45,7 @@ setup(
             'sim_tf_publisher = robofest_sim.sim_tf_publisher:main',
             'px4_ext_odom_node = robofest_sim.px4_ext_odom_node:main',
             'ekf2_readiness_checker = robofest_sim.ekf2_readiness_checker:main',
+            'safe_path_planner = robofest_sim.safe_path_planner:main',
         ],
     },
 )

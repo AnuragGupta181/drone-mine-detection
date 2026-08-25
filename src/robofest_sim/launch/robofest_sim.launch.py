@@ -172,6 +172,25 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]
     )
 
+    # 13. Safe Path Planner (Phase 2.7 - A* costmap planner + RViz2 visualisation)
+    safe_path_planner_node = Node(
+        package='robofest_sim',
+        executable='safe_path_planner',
+        name='safe_path_planner',
+        output='screen',
+        parameters=[{
+            'manifest_path': '/home/ubuntu/px4_ros2_ws/src/robofest_sim/worlds/generated/stage1_manifest.json',
+            'frame_id': 'world',
+            'grid_res': 0.25,
+            'mine_radius': 0.15,
+            'mine_clearance': 1.0,
+            'drone_radius': 0.25,
+            'sigma_safety': 0.10,
+            'flight_alt': 1.2,
+            'publish_rate': 2.0,
+        }]
+    )
+
     return LaunchDescription([
         config_arg,
         seed_arg,
@@ -190,6 +209,7 @@ def generate_launch_description():
         ros_gz_bridge_node,
         lidar_static_tf_node,
         px4_ext_odom_node,
-        ekf2_readiness_checker_node
+        ekf2_readiness_checker_node,
+        safe_path_planner_node,
     ])
     

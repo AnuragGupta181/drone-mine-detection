@@ -47,6 +47,8 @@ HOLD_TICKS        = 40            # ticks × 0.1 s = 4 s hold at each station
 TAKEOFF_HOLD_TICKS = 40           # 4 s stabilisation at green box after takeoff
 ARM_RETRY_LIMIT   = 60            # 60 × 10 ticks × 0.1s = 60 s before abort
 WARMUP_TIMEOUT    = 600           # 600 ticks = 60 s max warmup per drone
+MAX_SPEED_MPS     = 1.2           # m/s maximum horizontal speed
+TICK_RATE_HZ      = 10.0          # Hz control rate
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Per-drone configuration
@@ -146,6 +148,7 @@ class DroneController:
         self.nav_state     = 0
         self.arming_state  = 0
         self.cur_x = self.cur_y = self.cur_z = 0.0
+        self.sp_x = self.sp_y = 0.0  # Current setpoint for interpolation
         self.state_timer   = 0
         self.wp_idx        = 0
         self.ekf2_ready    = False   # set by swarm node
@@ -263,7 +266,8 @@ class DroneController:
 
         # ── TAKEOFF ──────────────────────────────────────────────────────────
         elif self.state == "TAKEOFF":
-            self._pub_setpoint(0.0, 0.0, FLIGHT_ALT)
+            self.sp_x, self.sp_y = 0.0, 0.0
+            self._pub_setpoint(self.sp_x, self.sp_y, FLIGHT_ALT)
             if abs(self.cur_z - FLIGHT_ALT) < 0.25:
                 if self.state_timer >= TAKEOFF_HOLD_TICKS:   # 4 s green-box hold
                     self._transition("NAVIGATE")
@@ -278,10 +282,25 @@ class DroneController:
                 return
 
             tx, ty = self.waypoints[self.wp_idx]
-            self._pub_setpoint(tx, ty, FLIGHT_ALT)
+            
+            # Interpolate setpoint to limit speed
+            max_step = MAX_SPEED_MPS / TICK_RATE_HZ
+            dx = tx - self.sp_x
+            dy = ty - self.sp_y
+            dist_to_wp = math.hypot(dx, dy)
+            
+            if dist_to_wp > max_step:
+                self.sp_x += (dx / dist_to_wp) * max_step
+                self.sp_y += (dy / dist_to_wp) * max_step
+            else:
+                self.sp_x = tx
+                self.sp_y = ty
 
-            dist = math.hypot(self.cur_x - tx, self.cur_y - ty)
-            if dist < WP_RADIUS:
+            self._pub_setpoint(self.sp_x, self.sp_y, FLIGHT_ALT)
+
+            # Check if drone physically reached the waypoint
+            dist_physical = math.hypot(self.cur_x - tx, self.cur_y - ty)
+            if dist_physical < WP_RADIUS and dist_to_wp <= max_step:
                 self._log(f"Reached WP {self.wp_idx + 1}/{len(self.waypoints)}")
                 self.wp_idx += 1
 

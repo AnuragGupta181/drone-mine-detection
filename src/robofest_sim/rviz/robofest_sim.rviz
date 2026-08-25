@@ -10,6 +10,10 @@ Panels:
         - /Ground Truth Obstacles1
         - /Start Zone1
         - /Exit Zone1
+        - /Planning Markers1
+        - /Safe Path Drone 01
+        - /Safe Path Drone 11
+        - /Safe Path Drone 21
       Splitter Ratio: 0.5
   - Class: rviz_common/Views
     Expanded:
@@ -22,7 +26,7 @@ Visualization Manager:
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz_default_plugins/Grid
-      Color: 160; 160; 160
+      Color: 160; 160; 164
       Enabled: true
       Line Style:
         Line Width: 0.03
@@ -34,8 +38,8 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 40
-      Reference Frame: map
+      Plane Cell Count: 50
+      Reference Frame: world
       Value: true
 
     - Class: rviz_default_plugins/Marker
@@ -108,6 +112,84 @@ Visualization Manager:
         Value: /ground_truth/exit_zone
       Value: true
 
+    # ── Safe Path Planner Outputs ────────────────────────────────────────────
+
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Planning Markers
+      Namespaces:
+        mine_exclusion: true
+        mine_body: true
+        obstacle_zone: true
+        start_zone: true
+        exit_zone: true
+        zone_labels: true
+        safe_path_0: true
+        safe_path_1: true
+        safe_path_2: true
+        path_waypoints_0: true
+        path_waypoints_1: true
+        path_waypoints_2: true
+        drone_labels: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /planning/markers
+      Value: true
+
+    - Class: rviz_default_plugins/Path
+      Enabled: true
+      Name: Safe Path Drone 0
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /planning/safe_path/drone_0
+      Value: true
+      Color: 0; 230; 0
+      Alpha: 1.0
+      Line Style: Lines
+      Line Width: 0.12
+
+    - Class: rviz_default_plugins/Path
+      Enabled: true
+      Name: Safe Path Drone 1
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /planning/safe_path/drone_1
+      Value: true
+      Color: 0; 200; 255
+      Alpha: 1.0
+      Line Style: Lines
+      Line Width: 0.12
+
+    - Class: rviz_default_plugins/Path
+      Enabled: true
+      Name: Safe Path Drone 2
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /planning/safe_path/drone_2
+      Value: true
+      Color: 255; 230; 0
+      Alpha: 1.0
+      Line Style: Lines
+      Line Width: 0.12
+
+    # ── SLAM + Sensor Displays ───────────────────────────────────────────────
+
     - Class: rviz_default_plugins/Map
       Enabled: true
       Name: 2D SLAM Map
@@ -118,11 +200,26 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /map
       Value: true
-      Alpha: 0.7
+      Alpha: 0.6
+
+    - Class: rviz_default_plugins/LaserScan
+      Enabled: true
+      Name: LiDAR Scan
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /scan
+      Value: true
+      Size (m): 0.08
+      Style: Flat Squares
+      Color: 255; 80; 0
 
   Global Options:
-    Background Color: 48; 48; 48
-    Fixed Frame: map
+    Background Color: 35; 35; 42
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -133,45 +230,13 @@ Visualization Manager:
     - Class: rviz_default_plugins/FocusCamera
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 35
-      Focal Point:
-        X: 20
-        Y: 0
-        Z: 0
-      Name: Current View
-      Pitch: 0.8
-      Value: Orbit (rviz)
-      Yaw: 4.7
-  Displays:
-    - Class: rviz_default_plugins/TF
-      Enabled: true
-      Frame Timeout: 15
-      Marker Scale: 2.0
-      Name: TF
-      Show Arrows: true
-      Show Axes: true
-      Show Names: false
-      Update Interval: 0
-      Value: true
-      Frames:
-        All Enabled: false
-        base_link:
-          Value: true
-    - Class: rviz_default_plugins/LaserScan
-      Enabled: true
-      Name: LaserScan
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter Size: 10
-        History Policy: Keep Last
-        Reliability Policy: Best Effort
-        Value: /scan
-      Value: true
-      Size (m): 0.1
-      Style: Flat Squares
-      Color: 255; 0; 0
+      Class: rviz_default_plugins/TopDownOrtho
+      Scale: 22
+      Angle: 0
+      X: 20
+      Y: 0
+      Name: Top-Down Field View
+      Value: TopDownOrtho (rviz)
 Window Geometry:
-  Height: 800
-  Width: 1200
+  Height: 900
+  Width: 1400
