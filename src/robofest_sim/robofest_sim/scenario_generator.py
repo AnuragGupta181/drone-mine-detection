@@ -187,7 +187,20 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
     </include>
 """)
 
+    OBSTACLE_OVERRIDES = {
+        # obstacle_1 at (23.63, -3.32) blocks Drone 0 south lane — remove it
+        'obstacle_1': None,
+        # obstacle_4: user requested just behind tall_mountain_tree (which is at 23.0, -2.0)
+        'obstacle_4': (24.5, -2.0, 0.0),
+    }
+
     for obs in obstacles:
+        override = OBSTACLE_OVERRIDES.get(obs['id'], 'keep')
+        if override is None:
+            # Removed — skip
+            continue
+        if override != 'keep':
+            obs['x'], obs['y'], obs['z'] = override
         sdf_insertions.append(f"""
     <include>
       <uri>model://static_obstacle</uri>
@@ -195,6 +208,7 @@ def build_sdf_content(base_world_path, mines, obstacles, human_pos, appearance_m
       <pose>{obs['x']} {obs['y']} {obs['z']} 0 0 0</pose>
     </include>
 """)
+
 
     for m in mines:
         sdf_insertions.append(f"""

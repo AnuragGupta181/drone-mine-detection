@@ -18,11 +18,17 @@ from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster
 
 
+from sensor_msgs.msg import LaserScan
+from tf2_ros import StaticTransformBroadcaster
+
+
 class SimTFPublisherNode(Node):
     def __init__(self):
         super().__init__('sim_tf_publisher')
 
         self.tf_broadcaster = TransformBroadcaster(self)
+        self.static_broadcaster = StaticTransformBroadcaster(self)
+        self.known_scan_frames = set(['base_link', 'lidar_link'])
 
         qos_profile = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
@@ -45,7 +51,15 @@ class SimTFPublisherNode(Node):
             10
         )
 
-        # 2. Fallback subscriber: PX4 VehicleOdometry
+        # 2. Subscribe to /scan to automatically bridge any frame_id from Gazebo to base_link
+        self.scan_sub = self.create_subscription(
+            LaserScan,
+            '/scan',
+            self.scan_callback,
+            10
+        )
+
+        # 3. Fallback subscriber: PX4 VehicleOdometry
         self.px4_odom_sub = self.create_subscription(
             VehicleOdometry,
             '/fmu/out/vehicle_odometry',
@@ -54,7 +68,22 @@ class SimTFPublisherNode(Node):
         )
 
         self.has_gz_odom = False
-        self.get_logger().info("SimTFPublisher initialized listening for Gazebo odometry (/model/x500_lidar_2d_0/odometry).")
+        self.get_logger().info("SimTFPublisher initialized with dynamic scan frame TF bridge.")
+
+    def scan_callback(self, msg: LaserScan):
+        frame = msg.header.frame_id
+        if frame and frame not in self.known_scan_frames:
+            self.known_scan_frames.add(frame)
+            t = TransformStamped()
+            t.header.stamp = self.get_clock().now().to_msg()
+            t.header.frame_id = 'base_link'
+            t.child_frame_id = frame
+            t.transform.translation.x = 0.12
+            t.transform.translation.y = 0.0
+            t.transform.translation.z = 0.26
+            t.transform.rotation.w = 1.0
+            self.static_broadcaster.sendTransform(t)
+            self.get_logger().info(f"Auto-bridged scan frame '{frame}' -> 'base_link' TF.")
 
     def gz_odom_callback(self, msg: Odometry):
         self.has_gz_odom = True

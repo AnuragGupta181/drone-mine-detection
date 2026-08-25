@@ -139,13 +139,6 @@
 
     <include>
       <uri>model://static_obstacle</uri>
-      <name>obstacle_1</name>
-      <pose>23.63 -3.32 0.0 0 0 0</pose>
-    </include>
-
-
-    <include>
-      <uri>model://static_obstacle</uri>
       <name>obstacle_2</name>
       <pose>14.15 -1.94 0.0 0 0 0</pose>
     </include>
@@ -161,7 +154,7 @@
     <include>
       <uri>model://static_obstacle</uri>
       <name>obstacle_4</name>
-      <pose>30.2 -2.89 0.0 0 0 0</pose>
+      <pose>24.5 -2.0 0.0 0 0 0</pose>
     </include>
 
 

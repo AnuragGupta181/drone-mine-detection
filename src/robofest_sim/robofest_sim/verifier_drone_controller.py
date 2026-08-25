@@ -383,6 +383,33 @@ class VerifierDroneController:
 
         self._marker_pub.publish(ma)
 
+    def _publish_verifier_path_marker(self) -> None:
+        """Publish the planned human path as a purple line for Drone 4 (verifier) in RViz."""
+        if not self._human_wps_world:
+            return
+        now  = self._node.get_clock().now().to_msg()
+        ma   = MarkerArray()
+        life = Duration(); life.sec = 5
+
+        pm = Marker()
+        pm.header.frame_id    = 'world'
+        pm.header.stamp       = now
+        pm.ns                 = 'verifier_path'
+        pm.id                 = 8888
+        pm.type               = Marker.LINE_STRIP
+        pm.action             = Marker.ADD
+        pm.lifetime           = life
+        pm.scale.x            = 0.18
+        pm.color.r = 0.8; pm.color.g = 0.2; pm.color.b = 1.0; pm.color.a = 0.9  # purple
+        pm.pose.orientation.w = 1.0
+        for (wx, wy) in self._human_wps_world:
+            p = Point()
+            p.x = wx; p.y = wy; p.z = self._cfg.flight_alt_ned * -1.0
+            pm.points.append(p)
+        ma.markers.append(pm)
+        self._marker_pub.publish(ma)
+
+
     # ─────────────────────────────────────────────────────────────────────────
     # Main tick — called at TICK_RATE_HZ by SwarmMissionNode._tick()
     # ─────────────────────────────────────────────────────────────────────────
@@ -400,6 +427,10 @@ class VerifierDroneController:
         # Always keep offboard heartbeat alive once past WAIT_SCOUTS
         if self._state != _VState.WAIT_SCOUTS:
             self._pub_offboard()
+
+        # Always publish verifier path + progress markers every tick
+        self._publish_progress_markers()
+        self._publish_verifier_path_marker()
 
         # ── WAIT_SCOUTS ───────────────────────────────────────────────────────
         if self._state == _VState.WAIT_SCOUTS:

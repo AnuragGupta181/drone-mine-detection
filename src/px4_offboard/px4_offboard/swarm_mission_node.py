@@ -154,6 +154,7 @@ class DroneController:
         self.arming_state  = 0
         self.cur_x = self.cur_y = self.cur_z = 0.0
         self.sp_x = self.sp_y = 0.0  # Current setpoint for interpolation
+        self.sp_z = FLIGHT_ALT        # Tracks current Z setpoint, starts at flight alt
         self.state_timer   = 0
         self.wp_idx        = 0
         self.ekf2_ready    = False   # set by swarm node
@@ -222,7 +223,7 @@ class DroneController:
 
     # ── Main tick (called at 10 Hz by the parent node) ───────────────────────
     def tick(self):
-        if self.state in ("LAND", "DONE"):
+        if self.state == "DONE":
             return
 
         self._pub_offboard()
@@ -327,16 +328,36 @@ class DroneController:
             self._pub_setpoint(tx, ty, FLIGHT_ALT)
             self.state_timer += 1
             if self.state_timer >= HOLD_TICKS:
+                self.sp_z = FLIGHT_ALT   # seed descent from current flight altitude
                 self._transition("LAND")
 
         # ── LAND ─────────────────────────────────────────────────────────────
         elif self.state == "LAND":
-            if self.state_timer == 0:
-                self._send_cmd(VehicleCommand.VEHICLE_CMD_NAV_LAND)
+            tx, ty = self.waypoints[-1]
+            # Ascend setpoint Z from FLIGHT_ALT (e.g. -1.5 NED) toward -0.05 (ground).
+            # FLIGHT_ALT is negative in NED, so adding a positive rate raises it.
+            descent_rate = 0.03   # 0.03 m/tick × 10 Hz = 0.3 m/s descent
+            self.sp_z = min(-0.05, self.sp_z + descent_rate)
+            self._pub_setpoint(tx, ty, self.sp_z)
             self.state_timer += 1
-            if self.arming_state == VehicleStatus.ARMING_STATE_DISARMED:
+
+            # Send NAV_LAND once on entry
+            if self.state_timer == 1:
+                self._send_cmd(VehicleCommand.VEHICLE_CMD_NAV_LAND)
+
+            # Once setpoint is near ground, start issuing disarm commands
+            if self.sp_z >= -0.15:
+                if self.state_timer % 10 == 0:
+                    self._send_cmd(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, p1=0.0)
+
+            # Done: (a) PX4 disarmed, (b) near ground + long wait, (c) hard timeout safety
+            actually_on_ground = abs(self.cur_z) <= 0.4
+            if (self.arming_state == VehicleStatus.ARMING_STATE_DISARMED
+                    or (self.state_timer > 120 and actually_on_ground)
+                    or self.state_timer > 200):
                 self._transition("DONE")
-                self._log("=== Mission Complete ===")
+                self._log("=== Scout Mission Complete & Landed ===")
+
 
     @property
     def is_done(self):

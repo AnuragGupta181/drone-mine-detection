@@ -262,7 +262,8 @@ class SafePathPlannerNode(Node):
         # Subscribe to scouts_done to reveal minefield + human path
         self.scouts_done_sub = self.create_subscription(
             Bool, '/mission/scouts_done', self._scouts_done_cb, 10)
-        self.show_mines = False
+        self.show_mines = False    # True once >=2 scouts land: reveal mines & drone paths
+        self.show_paths = False    # same gate — drone paths shown at the same time
 
         # ── Internal state ───────────────────────────────────────────────────
         self.manifest        = None
@@ -443,10 +444,11 @@ class SafePathPlannerNode(Node):
 
     # ─────────────────────────────────────────────────────────────────────────
     def _scouts_done_cb(self, msg: Bool) -> None:
-        """Trigger to reveal the hidden minefield and human path."""
+        """Trigger to reveal the hidden minefield, drone paths and human path."""
         if msg.data and not self.show_mines:
-            self.get_logger().info('At least 2 scouts landed — revealing minefield and human path in RViz.')
+            self.get_logger().info('At least 2 scouts landed — revealing minefield, safe paths, and human path in RViz.')
             self.show_mines = True
+            self.show_paths = True
 
     # ─────────────────────────────────────────────────────────────────────────
     def _verdict_cb(self, msg: String) -> None:
@@ -634,66 +636,67 @@ class SafePathPlannerNode(Node):
         mt.text            = 'EXIT ZONE'
         ma.markers.append(mt)
 
-        # ── Safe paths (LINE_STRIP per drone) ─────────────────────────────────
-        for drone_id, path_pts in enumerate(self.planned_paths):
-            if path_pts is None:
-                continue
-            color = DRONE_COLORS[drone_id]
+        # ── Safe paths (LINE_STRIP per drone, HIDDEN until 2 scouts land) ──────
+        if getattr(self, 'show_paths', False):
+            for drone_id, path_pts in enumerate(self.planned_paths):
+                if path_pts is None:
+                    continue
+                color = DRONE_COLORS[drone_id]
 
-            # Path line
-            m = Marker()
-            m.header.frame_id = self.frame_id
-            m.header.stamp    = now
-            m.ns              = f'safe_path_{drone_id}'
-            m.id              = mid; mid += 1
-            m.type            = Marker.LINE_STRIP
-            m.action          = Marker.ADD
-            m.lifetime        = lifetime
-            m.scale.x         = 0.12   # line width
-            m.color           = color
-            m.pose.orientation.w = 1.0
-            for (wx, wy) in path_pts:
-                p = Point()
-                p.x = wx; p.y = wy; p.z = self.flight_alt
-                m.points.append(p)
-            ma.markers.append(m)
+                # Path line
+                m = Marker()
+                m.header.frame_id = self.frame_id
+                m.header.stamp    = now
+                m.ns              = f'safe_path_{drone_id}'
+                m.id              = mid; mid += 1
+                m.type            = Marker.LINE_STRIP
+                m.action          = Marker.ADD
+                m.lifetime        = lifetime
+                m.scale.x         = 0.12   # line width
+                m.color           = color
+                m.pose.orientation.w = 1.0
+                for (wx, wy) in path_pts:
+                    p = Point()
+                    p.x = wx; p.y = wy; p.z = self.flight_alt
+                    m.points.append(p)
+                ma.markers.append(m)
 
-            # Waypoint spheres
-            for wp_idx, (wx, wy) in enumerate(path_pts):
-                ms = Marker()
-                ms.header.frame_id = self.frame_id
-                ms.header.stamp    = now
-                ms.ns              = f'path_waypoints_{drone_id}'
-                ms.id              = mid; mid += 1
-                ms.type            = Marker.SPHERE
-                ms.action          = Marker.ADD
-                ms.lifetime        = lifetime
-                ms.pose.position.x = wx
-                ms.pose.position.y = wy
-                ms.pose.position.z = self.flight_alt
-                ms.pose.orientation.w = 1.0
-                ms.scale.x = ms.scale.y = ms.scale.z = 0.25
-                ms.color   = color
-                ma.markers.append(ms)
+                # Waypoint spheres
+                for wp_idx, (wx, wy) in enumerate(path_pts):
+                    ms = Marker()
+                    ms.header.frame_id = self.frame_id
+                    ms.header.stamp    = now
+                    ms.ns              = f'path_waypoints_{drone_id}'
+                    ms.id              = mid; mid += 1
+                    ms.type            = Marker.SPHERE
+                    ms.action          = Marker.ADD
+                    ms.lifetime        = lifetime
+                    ms.pose.position.x = wx
+                    ms.pose.position.y = wy
+                    ms.pose.position.z = self.flight_alt
+                    ms.pose.orientation.w = 1.0
+                    ms.scale.x = ms.scale.y = ms.scale.z = 0.25
+                    ms.color   = color
+                    ma.markers.append(ms)
 
-            # Drone label
-            if path_pts:
-                ml = Marker()
-                ml.header.frame_id = self.frame_id
-                ml.header.stamp    = now
-                ml.ns              = 'drone_labels'
-                ml.id              = mid; mid += 1
-                ml.type            = Marker.TEXT_VIEW_FACING
-                ml.action          = Marker.ADD
-                ml.lifetime        = lifetime
-                ml.pose.position.x = path_pts[0][0]
-                ml.pose.position.y = path_pts[0][1]
-                ml.pose.position.z = self.flight_alt + 0.5
-                ml.pose.orientation.w = 1.0
-                ml.scale.z         = 0.5
-                ml.color           = color
-                ml.text            = f'Drone {drone_id}'
-                ma.markers.append(ml)
+                # Drone label
+                if path_pts:
+                    ml = Marker()
+                    ml.header.frame_id = self.frame_id
+                    ml.header.stamp    = now
+                    ml.ns              = 'drone_labels'
+                    ml.id              = mid; mid += 1
+                    ml.type            = Marker.TEXT_VIEW_FACING
+                    ml.action          = Marker.ADD
+                    ml.lifetime        = lifetime
+                    ml.pose.position.x = path_pts[0][0]
+                    ml.pose.position.y = path_pts[0][1]
+                    ml.pose.position.z = self.flight_alt + 0.5
+                    ml.pose.orientation.w = 1.0
+                    ml.scale.z         = 0.5
+                    ml.color           = color
+                    ml.text            = f'Drone {drone_id}'
+                    ma.markers.append(ml)
 
         # ── Human escape corridor (merged) ────────────────────────────────────
         if self.human_path and getattr(self, 'show_mines', False):
