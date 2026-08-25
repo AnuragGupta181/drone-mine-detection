@@ -1,7 +1,7 @@
 {
-  "scenario_id": "stage1_seed_42_1787647624",
+  "scenario_id": "stage1_seed_42_1787648533",
   "seed": 42,
-  "timestamp": "2026-08-25T14:17:04.322313",
+  "timestamp": "2026-08-25T14:32:13.186614",
   "field": {
     "length": 40.0,
     "width": 10.0,
@@ -259,6 +259,19 @@
     }
   ],
   "obstacles": [
+    {
+      "id": "obstacle_1",
+      "position": [
+        23.63,
+        -3.32,
+        0.0
+      ],
+      "size": [
+        0.8,
+        0.8,
+        1.5
+      ]
+    },
     {
       "id": "obstacle_2",
       "position": [

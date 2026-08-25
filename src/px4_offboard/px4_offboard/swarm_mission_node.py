@@ -353,8 +353,8 @@ class DroneController:
             # Done: (a) PX4 disarmed, (b) near ground + long wait, (c) hard timeout safety
             actually_on_ground = abs(self.cur_z) <= 0.4
             if (self.arming_state == VehicleStatus.ARMING_STATE_DISARMED
-                    or (self.state_timer > 120 and actually_on_ground)
-                    or self.state_timer > 200):
+                    or (self.state_timer > 80 and actually_on_ground)
+                    or self.state_timer > 120):
                 self._transition("DONE")
                 self._log("=== Scout Mission Complete & Landed ===")
 

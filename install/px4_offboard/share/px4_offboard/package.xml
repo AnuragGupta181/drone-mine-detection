@@ -1,16 +1,1 @@
-<?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="3">
-  <name>px4_offboard</name>
-  <version>0.0.0</version>
-  <description>PX4 Offboard Control ROS 2 Package</description>
-  <maintainer email="ubuntu@todo.todo">ubuntu</maintainer>
-  <license>Apache-2.0</license>
-
-  <depend>rclpy</depend>
-  <depend>px4_msgs</depend>
-
-  <export>
-    <build_type>ament_python</build_type>
-  </export>
-</package>
+/home/ubuntu/px4_ros2_ws/build/px4_offboard/package.xml
