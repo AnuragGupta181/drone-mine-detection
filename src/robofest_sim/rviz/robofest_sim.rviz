@@ -188,6 +188,37 @@ Visualization Manager:
       Line Style: Lines
       Line Width: 0.12
 
+    - Class: rviz_default_plugins/Path
+      Enabled: true
+      Name: Human Escape Path (Merged)
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /planning/human_path
+      Value: true
+      Color: 255; 255; 255
+      Alpha: 1.0
+      Line Style: Lines
+      Line Width: 0.22
+
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Verifier Progress Markers
+      Namespaces:
+        verifier_progress: true
+        verifier_drone: true
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter Size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /mission/verifier_markers
+      Value: true
+
     # ── SLAM + Sensor Displays ───────────────────────────────────────────────
 
     - Class: rviz_default_plugins/Map

@@ -29,6 +29,8 @@ Formation landing (blue-box, Gazebo X=37.5)
 """
 
 import math
+import json
+import os
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
@@ -37,6 +39,9 @@ from px4_msgs.msg import (
     OffboardControlMode, TrajectorySetpoint, VehicleCommand,
     VehicleStatus, VehicleLocalPosition,
 )
+
+# Verifier drone (lives in robofest_sim package, same workspace)
+from robofest_sim.verifier_drone_controller import VerifierDroneController, VerifierConfig
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tunable constants
@@ -47,7 +52,7 @@ HOLD_TICKS        = 40            # ticks × 0.1 s = 4 s hold at each station
 TAKEOFF_HOLD_TICKS = 40           # 4 s stabilisation at green box after takeoff
 ARM_RETRY_LIMIT   = 60            # 60 × 10 ticks × 0.1s = 60 s before abort
 WARMUP_TIMEOUT    = 600           # 600 ticks = 60 s max warmup per drone
-MAX_SPEED_MPS     = 1.2           # m/s maximum horizontal speed
+MAX_SPEED_MPS     = 0.5           # m/s maximum horizontal speed
 TICK_RATE_HZ      = 10.0          # Hz control rate
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -340,7 +345,12 @@ class DroneController:
 
 # ─────────────────────────────────────────────────────────────────────────────
 class SwarmMissionNode(Node):
-    """Orchestrates all three DroneControllers from a single ROS 2 node."""
+    """Orchestrates 3 scout DroneControllers + 1 VerifierDroneController."""
+
+    # Default manifest path — override via ROS 2 parameter
+    _MANIFEST_DEFAULT = (
+        '/home/ubuntu/px4_ros2_ws/src/robofest_sim/worlds/generated/stage1_manifest.json'
+    )
 
     def __init__(self):
         super().__init__('swarm_mission_node')
@@ -352,30 +362,78 @@ class SwarmMissionNode(Node):
             depth=1,
         )
 
-        # Build drone controllers
+        # ── Scout drones (unchanged) ──────────────────────────────────────────
         self.drones = [DroneController(self, cfg, qos) for cfg in DRONE_CONFIGS]
 
+        # ── Load mine manifest for verifier clearance checks ─────────────────
+        self.declare_parameter('manifest_path', self._MANIFEST_DEFAULT)
+        manifest_path = self.get_parameter('manifest_path').value
+        mines = self._load_mines(manifest_path)
+
+        # ── Verifier drone (Drone 3) ──────────────────────────────────────────
+        verifier_cfg = VerifierConfig(
+            drone_id         = 3,
+            namespace        = 'px4_3',
+            flight_alt_ned   = -1.5,     # slightly higher than scouts at -1.2
+            cruise_speed_mps = 1.0,
+            wp_radius_m      = 0.5,
+            dwell_ticks      = 30,       # 3 s dwell at each WP
+            min_clearance_m  = 1.0,
+        )
+        self._verifier = VerifierDroneController(self, verifier_cfg, qos, mines)
+
         # Subscribe to shared EKF2 readiness signal
-        # (fires when ANY drone's EKF2 is ready; all use same Gazebo GPS)
         self.create_subscription(Bool, '/ekf2_ready', self._ekf2_cb, 10)
 
+        # Publisher to notify when at least 2 scouts have landed
+        self.scouts_done_pub = self.create_publisher(Bool, '/mission/scouts_done', qos)
+
         self.get_logger().info(
-            f"SwarmMissionNode started — controlling {len(self.drones)} drones. "
+            f"SwarmMissionNode started — {len(self.drones)} scouts + 1 verifier. "
             "Waiting for EKF2 readiness..."
         )
 
         self._tick_timer = self.create_timer(0.1, self._tick)
 
-    def _ekf2_cb(self, msg):
+    @staticmethod
+    def _load_mines(path: str) -> list:
+        """Load mine specs from scenario manifest. Returns [] on any error."""
+        try:
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                mines = data.get('mines', [])
+                return mines
+        except Exception as e:
+            pass
+        return []
+
+    def _ekf2_cb(self, msg: Bool) -> None:
         for d in self.drones:
             d.ekf2_ready = msg.data
+        self._verifier.ekf2_ready = msg.data
 
-    def _tick(self):
+    def _tick(self) -> None:
+        # Tick all scout drones
         for d in self.drones:
             d.tick()
 
-        if all(d.is_done for d in self.drones):
-            self.get_logger().info("=== ALL DRONES MISSION COMPLETE — Swarm landed. ===")
+        scouts_done_count = sum(1 for d in self.drones if d.is_done)
+        all_scouts_done = (scouts_done_count == len(self.drones))
+        at_least_2_scouts_done = (scouts_done_count >= 2)
+
+        # Notify planner when at least 2 scouts have landed (triggers map display)
+        msg = Bool()
+        msg.data = at_least_2_scouts_done
+        self.scouts_done_pub.publish(msg)
+
+        # Tick verifier — gates on ALL scouts finishing
+        self._verifier.tick(scouts_all_done=all_scouts_done)
+
+        # Shut down only when verifier is also done
+        if all_scouts_done and self._verifier.is_done:
+            self.get_logger().info(
+                "=== ALL DRONES + VERIFIER COMPLETE — Mission finished. ===")
             self._tick_timer.cancel()
 
 

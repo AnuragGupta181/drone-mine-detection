@@ -69,8 +69,10 @@ class SimTFPublisherNode(Node):
         t.transform.translation.y = msg.pose.pose.position.y
         t.transform.translation.z = msg.pose.pose.position.z
 
-        # Gazebo FLU Orientation
-        t.transform.rotation = msg.pose.pose.orientation
+        t.transform.rotation.x = msg.pose.pose.orientation.x
+        t.transform.rotation.y = msg.pose.pose.orientation.y
+        t.transform.rotation.z = msg.pose.pose.orientation.z
+        t.transform.rotation.w = msg.pose.pose.orientation.w
 
         self.tf_broadcaster.sendTransform(t)
 

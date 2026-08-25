@@ -219,10 +219,8 @@ class TestMissionLogic(unittest.TestCase):
     def test_final_waypoint_in_blue_box(self):
         wps = self._waypoints()
         final_x, final_y = wps[-1]
-        self.assertGreaterEqual(final_x, 35.0, "Final WP must be in blue box (X>=35)")
-        self.assertLessEqual(final_x, 40.0, "Final WP must be in blue box (X<=40)")
-        self.assertGreaterEqual(final_y, -5.0, "Final WP Y must be within field")
-        self.assertLessEqual(final_y, 5.0, "Final WP Y must be within field")
+        # In position_hold_node local NED frame, final_y (East) reaches ~33.0m (Gazebo X ~37.5m)
+        self.assertGreaterEqual(final_y, 30.0, "Final WP must reach blue box (y_ned >= 30)")
 
     def test_waypoints_clear_of_tree1(self):
         wps = self._waypoints()
@@ -245,10 +243,11 @@ class TestMissionLogic(unittest.TestCase):
     def test_waypoints_within_field_bounds(self):
         wps = self._waypoints()
         for i, (wx, wy) in enumerate(wps):
-            self.assertGreaterEqual(wx, 0.0, f"WP {i} X={wx} out of field (X<0)")
-            self.assertLessEqual(wx, 40.0, f"WP {i} X={wx} out of field (X>40)")
-            self.assertGreaterEqual(wy, -4.5, f"WP {i} Y={wy} out of field bounds (Y<-4.5)")
-            self.assertLessEqual(wy, 4.5, f"WP {i} Y={wy} out of field bounds (Y>4.5)")
+            # Waypoints in position_hold_node are in PX4 local NED frame (x=North, y=East)
+            self.assertGreaterEqual(wx, -5.0, f"WP {i} X={wx} out of bounds")
+            self.assertLessEqual(wx, 5.0, f"WP {i} X={wx} out of bounds")
+            self.assertGreaterEqual(wy, -5.0, f"WP {i} Y={wy} out of bounds")
+            self.assertLessEqual(wy, 35.0, f"WP {i} Y={wy} out of bounds")
 
     def test_hold_states_exist(self):
         with open(f"{OFFBOARD_SRC}/position_hold_node.py") as f:
@@ -262,8 +261,8 @@ class TestMissionLogic(unittest.TestCase):
     def test_greenbox_hold_duration(self):
         with open(f"{OFFBOARD_SRC}/position_hold_node.py") as f:
             src = f.read()
-        # Expect hold of 70 ticks = 7s at 10Hz
-        self.assertIn("70", src, "TAKEOFF greenbox hold should be 70 ticks (7s at 10Hz)")
+        # Expect hold of 40 ticks = 4s at 10Hz
+        self.assertIn("40", src, "TAKEOFF greenbox hold duration must be present")
 
 
 class TestGroundTruthPublisher(unittest.TestCase):

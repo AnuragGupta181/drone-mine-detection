@@ -95,12 +95,30 @@ echo ""
 echo "  Waiting 10s more for all drones to fully initialize EKF2..."
 sleep 10
 
+# ── Step 6: Spawn Drone 3 (verifier drone — waits for scouts) ────────────
 echo ""
 echo "════════════════════════════════════════════════════"
-echo "  ✅ All 3 drones spawned!"
-echo "     Drone 0 (South,  Y=-2): instance 0, port 8888, /fmu/..."
-echo "     Drone 1 (Centre, Y= 0): instance 1, port 8889, /px4_1/fmu/..."
-echo "     Drone 2 (North,  Y=+2): instance 2, port 8890, /px4_2/fmu/..."
+echo "  Spawning Drone 3 — VERIFIER (Y=0, instance 3)..."
+echo "════════════════════════════════════════════════════"
+mkdir -p "$BUILD_DIR/instance_3"
+cd "$BUILD_DIR/instance_3"
+PX4_GZ_STANDALONE=1 \
+PX4_GZ_WORLD="$WORLD" \
+PX4_GZ_MODEL_POSE="2.5,1.0,0.25" \
+PX4_GZ_INSTANCE=3 \
+PX4_SIM_MODEL=gz_x500_lidar_2d \
+"$BUILD_DIR/bin/px4" -i 3 -d "$BUILD_DIR/etc" > /tmp/px4_3.log 2>&1 &
+DRONE3_PID=$!
+echo "  Drone 3 (Verifier) PID: $DRONE3_PID"
+sleep 15
+
+echo ""
+echo "════════════════════════════════════════════════════"
+echo "  ✅ All 4 drones spawned!"
+echo "     Drone 0 (Scout South,  Y=-2): instance 0, /fmu/..."
+echo "     Drone 1 (Scout Centre, Y= 0): instance 1, /px4_1/fmu/..."
+echo "     Drone 2 (Scout North,  Y=+2): instance 2, /px4_2/fmu/..."
+echo "     Drone 3 (VERIFIER,     Y= 0): instance 3, /px4_3/fmu/..."
 echo ""
 echo "  Now in a NEW terminal, run:"
 echo "    cd ~/px4_ros2_ws && source install/setup.bash"
@@ -110,9 +128,12 @@ echo "  Then in ANOTHER terminal, start the swarm:"
 echo "    cd ~/px4_ros2_ws && source install/setup.bash"
 echo "    ros2 run px4_offboard swarm_mission_node"
 echo ""
-echo "  To verify all 3 drones have DDS topics:"
-echo "    ros2 topic list | grep fmu | sort"
-echo "  Expected: /fmu/..., /px4_1/fmu/..., /px4_2/fmu/..."
+echo "  Mission sequence:"
+echo "    1. Drones 0,1,2 scout 3 lanes simultaneously"
+echo "    2. safe_path_planner merges lanes → /planning/human_path"
+echo "    3. Drone 3 arms and flies the human path, verifying clearance"
+echo "    4. /mission/verification_report published → RViz shows SAFE/UNSAFE"
+echo "    5. Human moves Start→Exit along the verified path"
 echo "════════════════════════════════════════════════════"
 
 # Keep script alive

@@ -45,8 +45,12 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPo
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, Point
 from visualization_msgs.msg import Marker, MarkerArray
-from builtin_interfaces.msg import Duration
-from std_msgs.msg import ColorRGBA
+from std_msgs.msg import ColorRGBA, String, Bool
+
+# Internal pure-function library (no ROS dep)
+from robofest_sim.path_corridor import (
+    CorridorMerger, MaxClearanceStrategy, ClearanceValidator
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -247,7 +251,18 @@ class SafePathPlannerNode(Node):
             self.create_publisher(Path, f'/planning/safe_path/drone_{i}', qos)
             for i in range(3)
         ]
-        self.marker_pub = self.create_publisher(MarkerArray, '/planning/markers', qos)
+        self.marker_pub     = self.create_publisher(MarkerArray, '/planning/markers', qos)
+        # Human escape path: merged single path for the verifier drone + human guidance
+        self.human_path_pub = self.create_publisher(Path, '/planning/human_path', qos)
+        # Verification result subscriber (published by verifier drone node)
+        self.verdict_sub    = self.create_subscription(
+            String, '/mission/verification_report', self._verdict_cb, 10)
+        self._latest_verdict: Optional[str] = None
+
+        # Subscribe to scouts_done to reveal minefield + human path
+        self.scouts_done_sub = self.create_subscription(
+            Bool, '/mission/scouts_done', self._scouts_done_cb, 10)
+        self.show_mines = False
 
         # ── Internal state ───────────────────────────────────────────────────
         self.manifest        = None
@@ -257,7 +272,8 @@ class SafePathPlannerNode(Node):
         self.field_width     = 10.0
         self.start_zone      = {'x_min': 0,  'x_max': 5,  'y_min': -5, 'y_max': 5}
         self.exit_zone       = {'x_min': 35, 'x_max': 40, 'y_min': -5, 'y_max': 5}
-        self.planned_paths   = [None, None, None]  # world-frame list of (x,y)
+        self.planned_paths   = [None, None, None]  # world-frame list of (x,y) per scout
+        self.human_path      : List[Tuple[float, float]] = []  # merged corridor
 
         # ── Timer ────────────────────────────────────────────────────────────
         self._plan_timer = self.create_timer(
@@ -350,7 +366,7 @@ class SafePathPlannerNode(Node):
 
     # ─────────────────────────────────────────────────────────────────────────
     def _plan_all_paths(self):
-        """Run A* for each of the 3 drone lanes."""
+        """Run A* for each of the 3 drone lanes, then merge into human corridor."""
         self.planned_paths = [None, None, None]
 
         for drone_id, lane_y in enumerate(DRONE_LANE_Y):
@@ -386,6 +402,58 @@ class SafePathPlannerNode(Node):
                 self.get_logger().error(
                     f'Drone {drone_id}: A* FAILED — no navigable corridor exists!')
 
+        # ── Merge all scout paths into a single human corridor ────────────────
+        self._merge_human_path()
+
+    # ─────────────────────────────────────────────────────────────────────────
+    def _merge_human_path(self) -> None:
+        """
+        Merge 3 scout paths → one human escape corridor using
+        MaxClearanceStrategy (prefers path segments furthest from mines).
+        Validates the merged corridor and logs the result.
+        """
+        valid_paths = [p for p in self.planned_paths if p]
+        if not valid_paths:
+            self.get_logger().error('No scout paths available — cannot compute human path!')
+            return
+
+        x_start = (self.start_zone['x_min'] + self.start_zone['x_max']) / 2.0
+        x_end   = (self.exit_zone['x_min']  + self.exit_zone['x_max'])  / 2.0
+
+        # Use MaxClearance strategy so the human always walks the widest gap from mines
+        merger = CorridorMerger(
+            x_sample_step=0.5,
+            simplify_tolerance=0.3,
+            strategy=MaxClearanceStrategy(mines=self.mines),
+        )
+        self.human_path = merger.merge(valid_paths, x_start, x_end)
+
+        if not self.human_path:
+            self.get_logger().error('Corridor merger returned empty path!')
+            return
+
+        # Validate merged path against mine clearances
+        passed, report = ClearanceValidator.validate(
+            self.human_path, self.mines, self.mine_clearance)
+        level = self.get_logger().info if passed else self.get_logger().warn
+        level(f'[HumanPath] {report}')
+        self.get_logger().info(
+            f'[HumanPath] Merged corridor: {len(self.human_path)} waypoints '
+            f'(from {len(valid_paths)} scout lanes)')
+
+    # ─────────────────────────────────────────────────────────────────────────
+    def _scouts_done_cb(self, msg: Bool) -> None:
+        """Trigger to reveal the hidden minefield and human path."""
+        if msg.data and not self.show_mines:
+            self.get_logger().info('At least 2 scouts landed — revealing minefield and human path in RViz.')
+            self.show_mines = True
+
+    # ─────────────────────────────────────────────────────────────────────────
+    def _verdict_cb(self, msg: String) -> None:
+        """Receive verification report from the verifier drone."""
+        self._latest_verdict = msg.data
+        self.get_logger().info(f'[Verifier Report] {msg.data}')
+
     # ─────────────────────────────────────────────────────────────────────────
     def _publish_paths(self):
         now = self.get_clock().now().to_msg()
@@ -405,6 +473,22 @@ class SafePathPlannerNode(Node):
                     msg.poses.append(ps)
             self.path_pubs[drone_id].publish(msg)
 
+        # Publish merged human escape path (only after 2 scouts land)
+        if self.human_path and getattr(self, 'show_mines', False):
+            hmsg = Path()
+            hmsg.header.stamp    = now
+            hmsg.header.frame_id = self.frame_id
+            for (wx, wy) in self.human_path:
+                ps = PoseStamped()
+                ps.header.stamp    = now
+                ps.header.frame_id = self.frame_id
+                ps.pose.position.x = wx
+                ps.pose.position.y = wy
+                ps.pose.position.z = 0.1   # ground-level for human
+                ps.pose.orientation.w = 1.0
+                hmsg.poses.append(ps)
+            self.human_path_pub.publish(hmsg)
+
     # ─────────────────────────────────────────────────────────────────────────
     def _publish_markers(self):
         now  = self.get_clock().now().to_msg()
@@ -414,66 +498,67 @@ class SafePathPlannerNode(Node):
         lifetime = Duration()
         lifetime.sec = 2  # markers refresh every publish cycle
 
-        # ── Mine exclusion circles ────────────────────────────────────────────
-        for mine in self.mines:
-            m = Marker()
-            m.header.frame_id = self.frame_id
-            m.header.stamp    = now
-            m.ns              = 'mine_exclusion'
-            m.id              = mid; mid += 1
-            m.type            = Marker.CYLINDER
-            m.action          = Marker.ADD
-            m.lifetime        = lifetime
-            m.pose.position.x = float(mine['position'][0])
-            m.pose.position.y = float(mine['position'][1])
-            m.pose.position.z = 0.05
-            m.pose.orientation.w = 1.0
-            m.scale.x = self.R_inflation * 2.0
-            m.scale.y = self.R_inflation * 2.0
-            m.scale.z = 0.05
-            m.color   = rgba(1.0, 0.0, 0.0, 0.25)   # transparent red
-            ma.markers.append(m)
+        # ── Mine exclusion circles (HIDDEN UNTIL 2 SCOUTS LAND) ───────────────
+        if getattr(self, 'show_mines', False):
+            for mine in self.mines:
+                m = Marker()
+                m.header.frame_id = self.frame_id
+                m.header.stamp    = now
+                m.ns              = 'mine_exclusion'
+                m.id              = mid; mid += 1
+                m.type            = Marker.CYLINDER
+                m.action          = Marker.ADD
+                m.lifetime        = lifetime
+                m.pose.position.x = float(mine['position'][0])
+                m.pose.position.y = float(mine['position'][1])
+                m.pose.position.z = 0.05
+                m.pose.orientation.w = 1.0
+                m.scale.x = self.R_inflation * 2.0
+                m.scale.y = self.R_inflation * 2.0
+                m.scale.z = 0.05
+                m.color   = rgba(1.0, 0.0, 0.0, 0.25)   # transparent red
+                ma.markers.append(m)
 
-            # Mine body (solid red disc)
-            m2 = Marker()
-            m2.header.frame_id = self.frame_id
-            m2.header.stamp    = now
-            m2.ns              = 'mine_body'
-            m2.id              = mid; mid += 1
-            m2.type            = Marker.CYLINDER
-            m2.action          = Marker.ADD
-            m2.lifetime        = lifetime
-            m2.pose.position.x = float(mine['position'][0])
-            m2.pose.position.y = float(mine['position'][1])
-            m2.pose.position.z = 0.05
-            m2.pose.orientation.w = 1.0
-            m2.scale.x = self.mine_radius * 2.0
-            m2.scale.y = self.mine_radius * 2.0
-            m2.scale.z = 0.12
-            m2.color   = rgba(1.0, 0.0, 0.0, 0.9)
-            ma.markers.append(m2)
+                # Mine body (solid red disc)
+                m2 = Marker()
+                m2.header.frame_id = self.frame_id
+                m2.header.stamp    = now
+                m2.ns              = 'mine_body'
+                m2.id              = mid; mid += 1
+                m2.type            = Marker.CYLINDER
+                m2.action          = Marker.ADD
+                m2.lifetime        = lifetime
+                m2.pose.position.x = float(mine['position'][0])
+                m2.pose.position.y = float(mine['position'][1])
+                m2.pose.position.z = 0.05
+                m2.pose.orientation.w = 1.0
+                m2.scale.x = self.mine_radius * 2.0
+                m2.scale.y = self.mine_radius * 2.0
+                m2.scale.z = 0.12
+                m2.color   = rgba(1.0, 0.0, 0.0, 0.9)
+                ma.markers.append(m2)
 
-        # ── Obstacle zones ────────────────────────────────────────────────────
-        for obs in self.obstacles:
-            m = Marker()
-            m.header.frame_id = self.frame_id
-            m.header.stamp    = now
-            m.ns              = 'obstacle_zone'
-            m.id              = mid; mid += 1
-            m.type            = Marker.CYLINDER
-            m.action          = Marker.ADD
-            m.lifetime        = lifetime
-            m.pose.position.x = float(obs['position'][0])
-            m.pose.position.y = float(obs['position'][1])
-            m.pose.position.z = 0.5
-            m.pose.orientation.w = 1.0
-            m.scale.x = 1.0
-            m.scale.y = 1.0
-            m.scale.z = 1.5
-            m.color   = rgba(1.0, 0.55, 0.0, 0.7)   # orange
-            ma.markers.append(m)
+            # ── Obstacle zones ────────────────────────────────────────────────────
+            for obs in self.obstacles:
+                m = Marker()
+                m.header.frame_id = self.frame_id
+                m.header.stamp    = now
+                m.ns              = 'obstacle_zone'
+                m.id              = mid; mid += 1
+                m.type            = Marker.CYLINDER
+                m.action          = Marker.ADD
+                m.lifetime        = lifetime
+                m.pose.position.x = float(obs['position'][0])
+                m.pose.position.y = float(obs['position'][1])
+                m.pose.position.z = 0.5
+                m.pose.orientation.w = 1.0
+                m.scale.x = 1.0
+                m.scale.y = 1.0
+                m.scale.z = 1.5
+                m.color   = rgba(1.0, 0.55, 0.0, 0.7)   # orange
+                ma.markers.append(m)
 
-        # ── Start zone box ────────────────────────────────────────────────────
+        # ── Start zone box (ALWAYS VISIBLE) ───────────────────────────────────
         sz = self.start_zone
         m = Marker()
         m.header.frame_id = self.frame_id
@@ -609,6 +694,73 @@ class SafePathPlannerNode(Node):
                 ml.color           = color
                 ml.text            = f'Drone {drone_id}'
                 ma.markers.append(ml)
+
+        # ── Human escape corridor (merged) ────────────────────────────────────
+        if self.human_path and getattr(self, 'show_mines', False):
+            # Determine colour based on latest verification verdict
+            if self._latest_verdict is None:
+                hcolor = rgba(1.0, 1.0, 1.0, 0.9)          # white  = not yet verified
+                label_text = 'AWAITING VERIFICATION'
+            elif 'SAFE' in (self._latest_verdict or '').upper():
+                hcolor = rgba(0.0, 1.0, 0.4, 1.0)           # bright green = SAFE
+                label_text = '✓ SAFE — HUMAN MAY PROCEED'
+            else:
+                hcolor = rgba(1.0, 0.2, 0.0, 1.0)           # red = UNSAFE
+                label_text = '✗ UNSAFE — RE-PLANNING NEEDED'
+
+            # Thick ground-level LINE_STRIP
+            hm = Marker()
+            hm.header.frame_id = self.frame_id
+            hm.header.stamp    = now
+            hm.ns              = 'human_path'
+            hm.id              = mid; mid += 1
+            hm.type            = Marker.LINE_STRIP
+            hm.action          = Marker.ADD
+            hm.lifetime        = lifetime
+            hm.scale.x         = 0.22    # wider than drone paths
+            hm.color           = hcolor
+            hm.pose.orientation.w = 1.0
+            for (wx, wy) in self.human_path:
+                p = Point(); p.x = wx; p.y = wy; p.z = 0.15
+                hm.points.append(p)
+            ma.markers.append(hm)
+
+            # Diamond (sphere) at each human waypoint
+            for (wx, wy) in self.human_path:
+                hd = Marker()
+                hd.header.frame_id = self.frame_id
+                hd.header.stamp    = now
+                hd.ns              = 'human_waypoints'
+                hd.id              = mid; mid += 1
+                hd.type            = Marker.SPHERE
+                hd.action          = Marker.ADD
+                hd.lifetime        = lifetime
+                hd.pose.position.x = wx
+                hd.pose.position.y = wy
+                hd.pose.position.z = 0.2
+                hd.pose.orientation.w = 1.0
+                hd.scale.x = hd.scale.y = hd.scale.z = 0.35
+                hd.color   = hcolor
+                ma.markers.append(hd)
+
+            # Floating verdict label above mid-field
+            mid_wp = self.human_path[len(self.human_path) // 2]
+            hl = Marker()
+            hl.header.frame_id = self.frame_id
+            hl.header.stamp    = now
+            hl.ns              = 'human_verdict'
+            hl.id              = mid; mid += 1
+            hl.type            = Marker.TEXT_VIEW_FACING
+            hl.action          = Marker.ADD
+            hl.lifetime        = lifetime
+            hl.pose.position.x = mid_wp[0]
+            hl.pose.position.y = mid_wp[1]
+            hl.pose.position.z = 2.5
+            hl.pose.orientation.w = 1.0
+            hl.scale.z         = 0.7
+            hl.color           = hcolor
+            hl.text            = label_text
+            ma.markers.append(hl)
 
         self.marker_pub.publish(ma)
 

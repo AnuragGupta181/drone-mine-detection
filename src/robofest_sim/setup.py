@@ -46,6 +46,8 @@ setup(
             'px4_ext_odom_node = robofest_sim.px4_ext_odom_node:main',
             'ekf2_readiness_checker = robofest_sim.ekf2_readiness_checker:main',
             'safe_path_planner = robofest_sim.safe_path_planner:main',
+            # path_corridor and verifier_drone_controller are libraries (no main),
+            # imported directly by safe_path_planner and swarm_mission_node.
         ],
     },
 )
