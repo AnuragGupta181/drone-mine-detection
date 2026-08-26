@@ -10,6 +10,13 @@ The mission uses a swarm of 4 drones operating in a 10x40m simulated minefield:
 3. **Verifier Drone (Drone 3):** Takes off automatically after scouts finish, flies the generated human escape path, verifies physical clearance, and issues a final `SAFE` or `UNSAFE` verdict.
 4. **Human Subject:** Escapes the Start Zone using the verified path.
 
+### Simulation & Visualization Highlights
+
+| PX4 SITL & Gazebo Swarm Lineup | RViz 2D Path Planning & Clearance Verdict |
+| :---: | :---: |
+| ![PX4 Gazebo Swarm](public/simulation/3.png) | ![RViz Clearance Verdict](public/simulation/23.png) |
+| *4 PX4 SITL quadrotors lined up at Start Zone in Gazebo* | *Merged human escape corridor with clearance verification in RViz* |
+
 ## Architecture
 
 ```mermaid
@@ -113,6 +120,16 @@ cd ~/px4_ros2_ws
 source install/setup.bash
 python3 -m pytest src/robofest_sim/test/ src/px4_offboard/test/
 ```
+
+---
+
+## Project Documentation Index
+
+For detailed architectural, theoretical, and simulation documentation, refer to the dedicated guides:
+
+* **[SIMULATION.md](SIMULATION.md)** — Complete simulation showcase including embedded recording (`main.mp4` at 2x playback speed) and step-by-step image analysis across all 5 flight phases (Pre-Flight Setup, Scout Scanning, Landing, Verification, RViz Verdict).
+* **[slam_architecture.md](slam_architecture.md)** — In-depth 2D LiDAR SLAM pipeline (`slam_toolbox`), PX4 EKF2 sensor fusion integration (LiDAR $X,Y$ + Rangefinder $Z$ + Optical Flow velocity), frame transforms, and hardware deployment options.
+* **[aerostack2_swarm_architecture.md](aerostack2_swarm_architecture.md)** — Comprehensive Aerostack2 (AS2) framework architecture blueprint, 5-layer system diagrams, Behavior Tree swarm control flow (`py_trees`), package mapping, and hardware deployment roadmap.
 
 ---
 
