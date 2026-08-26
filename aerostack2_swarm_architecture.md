@@ -38,6 +38,13 @@ Aerostack2 uses a **modular, 5-layer ROS 2 architecture**. Each drone runs stand
 
 ```mermaid
 flowchart TD
+    %% Subtle Color Styling
+    classDef mission fill:#f3e5f5,stroke:#8e24aa,stroke-width:1.5px,color:#4a148c;
+    classDef behavior fill:#e8eaf6,stroke:#3f51b5,stroke-width:1.5px,color:#1a237e;
+    classDef motion fill:#e0f2f1,stroke:#00897b,stroke-width:1.5px,color:#004d40;
+    classDef est fill:#e8f5e9,stroke:#43a047,stroke-width:1.5px,color:#1b5e20;
+    classDef platform fill:#fff3e0,stroke:#fb8c00,stroke-width:1.5px,color:#e65100;
+
     subgraph MissionLayer["LAYER 5: SWARM MISSION & ORCHESTRATION"]
         BT["AS2 Behavior Tree Orchestrator (py_trees)"]
         MinePlanner["Custom Minefield Path Planner (A* Merge)"]
@@ -79,6 +86,12 @@ flowchart TD
     PixhawkPlatform --> StateEst
     StateEst --> Controller
     StateEst --> BehaviorLayer
+
+    class MissionLayer,BT,MinePlanner mission;
+    class BehaviorLayer,Takeoff,Land,GoTo,FollowPath behavior;
+    class MotionLayer,RefGen,Controller motion;
+    class EstimationLayer,StateEst est;
+    class PlatformLayer,PixhawkPlatform,PX4 platform;
 ```
 
 ---

@@ -13,32 +13,37 @@ The mission uses a swarm of 4 drones operating in a 10x40m simulated minefield:
 ## Architecture
 
 ```mermaid
-graph TD
-    subgraph Swarm Control
-        SMN[SwarmMissionNode]
-        D0[Scout 0 Controller]
-        D1[Scout 1 Controller]
-        D2[Scout 2 Controller]
-        V3[Verifier Controller]
+flowchart TD
+    %% Subtle Color Styling
+    classDef control fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px,color:#312e81;
+    classDef sim fill:#fff7ed,stroke:#f97316,stroke-width:1.5px,color:#7c2d12;
+    classDef nav fill:#f0fdf4,stroke:#22c55e,stroke-width:1.5px,color:#14532d;
+
+    subgraph SwarmControl["Swarm Control Layer"]
+        SMN["SwarmMissionNode"]
+        D0["Scout 0 Controller"]
+        D1["Scout 1 Controller"]
+        D2["Scout 2 Controller"]
+        V3["Verifier Controller"]
         SMN -->|ticks| D0
         SMN -->|ticks| D1
         SMN -->|ticks| D2
         SMN -->|gates on scouts| V3
     end
 
-    subgraph Simulation
-        PX4[PX4 SITL x4]
-        GZ[Gazebo Classic]
-        DDS[MicroXRCE-DDS]
+    subgraph SimulationLayer["Simulation Infrastructure"]
+        PX4["PX4 SITL x4"]
+        GZ["Gazebo Sim"]
+        DDS["MicroXRCE-DDS Agent"]
         GZ <--> PX4
         PX4 <--> DDS
     end
 
-    subgraph ROS 2 Nav & Path Planning
-        SPP[Safe Path Planner Node]
-        TF[Sim TF Publisher]
-        CM[Corridor Merger]
-        CV[Clearance Validator]
+    subgraph NavPlanning["ROS 2 Navigation & Path Planning"]
+        SPP["Safe Path Planner Node"]
+        TF["Sim TF Publisher"]
+        CM["Corridor Merger"]
+        CV["Clearance Validator"]
         
         SPP --> CM
         V3 --> CV
@@ -51,7 +56,11 @@ graph TD
     
     SPP -->|Merged Safe Path| V3
     V3 -->|Verdict| SPP
-    TF -->|odom to base_link| RViz
+    TF -->|odom to base_link| NavPlanning
+
+    class SwarmControl,SMN,D0,D1,D2,V3 control;
+    class SimulationLayer,PX4,GZ,DDS sim;
+    class NavPlanning,SPP,TF,CM,CV nav;
 ```
 
 ## Running the Simulation
@@ -104,3 +113,16 @@ cd ~/px4_ros2_ws
 source install/setup.bash
 python3 -m pytest src/robofest_sim/test/ src/px4_offboard/test/
 ```
+
+---
+
+## 📚 Reference Repositories & Frameworks Used
+
+This project references and integrates components from the following open-source aerial robotics frameworks and repositories:
+
+* **[Aerostack2 (`aerostack2/aerostack2`)](https://github.com/aerostack2/aerostack2)**: Referenced for multi-drone ROS 2 behavior-based control, Hardware Abstraction Layer (HAL) concepts, and hardware deployment roadmap (see [`aerostack2_swarm_architecture.md`](aerostack2_swarm_architecture.md)).
+* **[PX4 Autopilot (`PX4/PX4-Autopilot`)](https://github.com/PX4/PX4-Autopilot)**: Open-source flight stack providing multi-instance PX4 SITL physics simulation, offboard mode, and EKF2 sensor fusion.
+* **[Micro-XRCE-DDS Agent (`eProsima/Micro-XRCE-DDS-Agent`)](https://github.com/eProsima/Micro-XRCE-DDS-Agent)**: Client-agent middleware connecting PX4 uORB topics directly into ROS 2 nodes over high-speed UDP/Serial transport.
+* **[SLAM Toolbox (`SteveMacenski/slam_toolbox`)](https://github.com/SteveMacenski/slam_toolbox)**: 2D LiDAR SLAM & pose-graph optimization framework used for mapping and GPS-denied localization.
+* **[ROS-Gazebo Bridge (`gazebosim/ros_gz`)](https://github.com/gazebosim/ros_gz)**: ROS 2 to Gazebo Ignition / Harmonic transport bridge for 2D LiDAR scans, clock synchronization, and odometry feedback.
+
