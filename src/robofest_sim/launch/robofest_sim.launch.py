@@ -140,8 +140,13 @@ def generate_launch_description():
         arguments=[
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            # Drone 0 (instance 0) — primary odometry (used by SLAM)
             '/model/x500_lidar_2d/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/model/x500_lidar_2d_0/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry'
+            '/model/x500_lidar_2d_0/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            # Drone 1 (instance 1)
+            '/model/x500_lidar_2d_1/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            # Drone 2 (instance 2)
+            '/model/x500_lidar_2d_2/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
         ]
     )
 
@@ -187,7 +192,7 @@ def generate_launch_description():
             'drone_radius': 0.25,
             'sigma_safety': 0.10,
             'flight_alt': 1.2,
-            'publish_rate': 2.0,
+            'publish_rate': 5.0,   # 5 Hz for smooth animated mine danger rings
         }]
     )
 

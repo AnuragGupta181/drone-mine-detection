@@ -38,6 +38,7 @@ import math
 import os
 import heapq
 from typing import List, Tuple, Optional
+from builtin_interfaces.msg import Duration
 
 import rclpy
 from rclpy.node import Node
@@ -219,7 +220,7 @@ class SafePathPlannerNode(Node):
         self.declare_parameter('drone_radius', 0.25)
         self.declare_parameter('sigma_safety', 0.10)
         self.declare_parameter('flight_alt',   1.2)
-        self.declare_parameter('publish_rate', 2.0)
+        self.declare_parameter('publish_rate', 5.0)
 
         self.manifest_path   = self.get_parameter('manifest_path').value
         self.frame_id        = self.get_parameter('frame_id').value
@@ -282,6 +283,9 @@ class SafePathPlannerNode(Node):
         self.exit_zone       = {'x_min': 35, 'x_max': 40, 'y_min': -5, 'y_max': 5}
         self.planned_paths   = [None, None, None]  # world-frame list of (x,y) per scout
         self.human_path      : List[Tuple[float, float]] = []  # merged corridor
+
+        # ── Animation state (for pulsing mine danger rings) ──────────────────
+        self._ring_phase: float = 0.0   # 0.0 → 2π, advances each publish tick
 
         # ── Timer ────────────────────────────────────────────────────────────
         self._plan_timer = self.create_timer(
@@ -505,29 +509,31 @@ class SafePathPlannerNode(Node):
         mid  = 0   # sequential marker ID
 
         lifetime = Duration()
-        lifetime.sec = 2  # markers refresh every publish cycle
+        lifetime.sec = 1  # markers refresh every publish cycle
 
-        # ── Mine exclusion circles (HIDDEN UNTIL 2 SCOUTS LAND) ───────────────
+        # ── Mine danger zone (ALWAYS VISIBLE, filled low-opacity red circle) ──
+        for mine in self.mines:
+            m = Marker()
+            m.header.frame_id = self.frame_id
+            m.header.stamp    = now
+            m.ns              = 'mine_danger_ring'
+            m.id              = mid; mid += 1
+            m.type            = Marker.CYLINDER
+            m.action          = Marker.ADD
+            m.lifetime        = lifetime
+            m.pose.position.x = float(mine['position'][0])
+            m.pose.position.y = float(mine['position'][1])
+            m.pose.position.z = 0.05
+            m.pose.orientation.w = 1.0
+            m.scale.x = self.R_inflation * 2.0
+            m.scale.y = self.R_inflation * 2.0
+            m.scale.z = 0.05
+            m.color   = rgba(1.0, 0.0, 0.0, 0.15)   # transparent low red
+            ma.markers.append(m)
+
+        # ── Mine body (solid red disc, HIDDEN UNTIL 2 SCOUTS LAND) ──────────
         if getattr(self, 'show_mines', False):
             for mine in self.mines:
-                m = Marker()
-                m.header.frame_id = self.frame_id
-                m.header.stamp    = now
-                m.ns              = 'mine_exclusion'
-                m.id              = mid; mid += 1
-                m.type            = Marker.CYLINDER
-                m.action          = Marker.ADD
-                m.lifetime        = lifetime
-                m.pose.position.x = float(mine['position'][0])
-                m.pose.position.y = float(mine['position'][1])
-                m.pose.position.z = 0.05
-                m.pose.orientation.w = 1.0
-                m.scale.x = self.R_inflation * 2.0
-                m.scale.y = self.R_inflation * 2.0
-                m.scale.z = 0.05
-                m.color   = rgba(1.0, 0.0, 0.0, 0.25)   # transparent red
-                ma.markers.append(m)
-
                 # Mine body (solid red disc)
                 m2 = Marker()
                 m2.header.frame_id = self.frame_id
