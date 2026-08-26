@@ -1,4 +1,4 @@
-# 🛸 Aerostack2 (AS2) Multi-Drone Swarm Architecture Blueprint
+# Aerostack2 (AS2) Multi-Drone Swarm Architecture Blueprint
 
 ---
 

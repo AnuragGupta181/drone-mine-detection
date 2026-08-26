@@ -109,7 +109,10 @@ def generate_launch_description():
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
         output='screen',
-        parameters=[slam_params_path]
+        parameters=[
+            slam_params_path,
+            {'use_sim_time': True},   # <-- CRITICAL: must match clock source
+        ]
     )
 
     # 7. Static World -> Map TF Publisher (Syncs RViz ground truth markers in world frame with map frame)
@@ -138,15 +141,15 @@ def generate_launch_description():
         name='ros_gz_bridge',
         output='screen',
         arguments=[
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/scan@sensor_msgs/msg/LaserScan[ignition.msgs.LaserScan',
+            '/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock',
             # Drone 0 (instance 0) — primary odometry (used by SLAM)
-            '/model/x500_lidar_2d/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/model/x500_lidar_2d_0/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/model/x500_lidar_2d/odometry@nav_msgs/msg/Odometry[ignition.msgs.Odometry',
+            '/model/x500_lidar_2d_0/odometry@nav_msgs/msg/Odometry[ignition.msgs.Odometry',
             # Drone 1 (instance 1)
-            '/model/x500_lidar_2d_1/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/model/x500_lidar_2d_1/odometry@nav_msgs/msg/Odometry[ignition.msgs.Odometry',
             # Drone 2 (instance 2)
-            '/model/x500_lidar_2d_2/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/model/x500_lidar_2d_2/odometry@nav_msgs/msg/Odometry[ignition.msgs.Odometry',
         ]
     )
 
