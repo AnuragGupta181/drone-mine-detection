@@ -7,17 +7,7 @@ Welcome to the full simulation showcase of the **GPS-Denied Swarm Minefield Dete
 ## Full Simulation Recording
 
 <div align="center">
-  <video id="mainSimVideo" width="100%" controls autoplay loop muted style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-    <source src="public/simulation/main.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      var video = document.getElementById("mainSimVideo");
-      if (video) { video.playbackRate = 2.0; }
-    });
-  </script>
-  <p><em>Note: Video is set to play automatically at 2.0x playback speed.</em></p>
+  <video src="public/simulation/main.mp4" controls width="100%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></video>
 </div>
 
 ---
