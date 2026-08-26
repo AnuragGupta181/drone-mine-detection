@@ -116,7 +116,7 @@ python3 -m pytest src/robofest_sim/test/ src/px4_offboard/test/
 
 ---
 
-## 📚 Reference Repositories & Frameworks Used
+## Reference Repositories & Frameworks Used
 
 This project references and integrates components from the following open-source aerial robotics frameworks and repositories:
 
