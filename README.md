@@ -1,5 +1,11 @@
 # GPS-Denied Autonomous Mine Detection Swarm
 
+[![ROS2](https://img.shields.io/badge/ROS2-Humble-0078D4?style=flat&logo=ros)](https://docs.ros.org/en/humble/)
+[![PX4](https://img.shields.io/badge/PX4-v1.14-6cc24a?style=flat)](https://px4.io/)
+[![Python](https://img.shields.io/badge/Python-3.8+-dfb317?style=flat&logo=python)](https://www.python.org/)
+[![Gazebo](https://img.shields.io/badge/Gazebo-Garden%2FHarmonic-orange?style=flat)](https://gazebosim.org/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20LTS-E95420?style=flat&logo=ubuntu)](https://ubuntu.com/)
+
 This workspace contains a ROS 2 + PX4 SITL (Software In The Loop) simulation for an autonomous drone swarm designed to map a minefield and guide a human safely out without using GPS.
 
 ## Overview
@@ -9,6 +15,17 @@ The mission uses a swarm of 4 drones operating in a 10x40m simulated minefield:
 2. **Path Planner:** Central ROS node that merges the scouts' observations to calculate a safe human escape path with maximum clearance.
 3. **Verifier Drone (Drone 3):** Takes off automatically after scouts finish, flies the generated human escape path, verifies physical clearance, and issues a final `SAFE` or `UNSAFE` verdict.
 4. **Human Subject:** Escapes the Start Zone using the verified path.
+
+### 🛠️ Tech Stack & Core Software Versions
+
+| Component | Framework / Technology | Version | Key Functionality |
+| :--- | :--- | :--- | :--- |
+| **Robotics Middleware** | **ROS 2** | `Humble` | Pub/Sub topic transport, Action Servers, parameters & TF2 transforms |
+| **Flight Autopilot** | **PX4 Autopilot** | `v1.14` | Physics SITL flight control, offboard position/velocity, EKF2 fusion |
+| **Programming Language** | **Python** | `3.8+` | Mission orchestrator, A* path merger, clearance validator, ROS 2 nodes |
+| **Physics Simulation** | **Gazebo Sim** | `Garden / Harmonic` | 3D multi-drone world simulation & sensor plugin dynamics |
+| **Perception Sensors** | **Stereo Depth Camera + IMU** | `RealSense D435i` | Visual-Depth SLAM, 3D PointCloud, optical flow & altitude rangefinder |
+| **DDS Middleware** | **MicroXRCE-DDS** | `v2.4+` | Ultra low-latency uORB to ROS 2 topic bridge |
 
 ### Simulation & Visualization Highlights
 
