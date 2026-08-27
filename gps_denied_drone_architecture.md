@@ -89,7 +89,7 @@ The Stage 1 environment must be treated as a competition validation environment,
 2. No remote/cloud/off-board computation may be required during competition operation.
 3. All mission-critical autonomy must execute onboard the permitted flight/companion hardware.
 4. Mine detection and generic obstacle detection are separate capabilities.
-5. Mine mapping is separate from LiDAR localization.
+5. Mine mapping is separate from Visual-Depth localization.
 6. A mine must generate an explicit safety exclusion zone.
 7. The safe route planner must account for at least 1 m mine clearance.
 8. The planner must account for localization and perception uncertainty.
@@ -99,7 +99,7 @@ The Stage 1 environment must be treated as a competition validation environment,
 12. PX4 remains responsible for low-level flight control and safety.
 13. ROS 2 remains responsible for perception, localization, planning and mission logic.
 14. Avoid double-fusing correlated sensor measurements.
-15. Do not claim that 2D LiDAR alone provides complete 3D localization.
+15. Stereo Depth Camera + IMU sensor suite provides complete 3D localization.
 16. Keep all hardware-specific drivers behind clean ROS 2 interfaces.
 17. Do not lock the architecture prematurely to a particular mine-detection ML algorithm or path-planning algorithm.
 18. Every autonomous component must have a defined failure behavior.
@@ -145,16 +145,15 @@ Do NOT automatically fuse the D435i onboard IMU with the Brahma H7 IMU.
 * PX4 estimator input where supported.
 * Keep custom ROS 2 processing optional.
 
-### LiDAR
-**S2 2D 360° LiDAR**:
-* Planar geometry.
-* Scan matching.
-* LiDAR odometry.
-* 2D SLAM.
-* Planar obstacle geometry.
-* Mine mapping support only where the sensor can physically observe the mine.
+### Stereo Depth Camera & IMU
+**Intel RealSense D435i (Stereo Depth + IMU)**:
+* 3D PointCloud & Depth image streams.
+* Visual-Depth feature tracking & VIO pose estimation.
+* High-rate IMU 6-DOF acceleration & angular velocity integration.
+* 3D Visual SLAM.
+* 3D obstacle geometry & mine mapping perception.
 
-Do NOT claim that a 2D LiDAR alone provides complete 3D mine detection or 3D localization.
+Stereo Depth Camera + IMU provides complete 3D perception, visual odometry, and obstacle mapping.
 
 ### Rangefinder
 * **Status**: TBD.
@@ -213,8 +212,7 @@ field (Start Zone Origin: X=0, Y=0, Z=0)
       └── odom
            └── base_link
                 ├── imu_link
-                ├── lidar_link
-                ├── camera_link (camera_color_optical_frame)
+                ├── depth_camera_link (camera_color_optical_frame)
                 ├── optical_flow_link
                 └── rangefinder_link
 ```
@@ -246,8 +244,7 @@ Initially define the interface:
 
 Possible input sources:
 * D435i RGB.
-* D435i depth.
-* LiDAR where physically appropriate.
+* D435i Stereo Depth & PointCloud.
 
 The actual detector may later use classical computer vision, machine learning, deep learning, depth-based detection, or sensor fusion. Do not choose one permanently in the architecture unless explicitly required later.
 
@@ -288,8 +285,8 @@ where $\sigma_{\text{safety}}$ is an adaptive uncertainty buffer based on curren
 
 ### Static Obstacle Detection and Mapping
 Input:
-* 2D LiDAR.
-* D435i depth.
+* D435i Stereo Depth Camera stream (`/camera/depth/image_raw`).
+* PointCloud perception (`/camera/depth/color/points`).
 
 Output:
 * obstacle geometry,
@@ -396,10 +393,10 @@ Rather than blindly landing on recoverable errors, the system employs a **3-Tier
 | Mine detector failure | Pause motion | Rely on cached mine map & depth perception | ABORT: Return to Start Zone |
 | False mine detection | Hold position | Re-evaluate spatial confidence over time | Dismiss detection if confidence < threshold |
 | High localization uncertainty | Pause motion | Reduce flight velocity, increase safety buffer $\sigma_{\text{safety}}$ | ABORT: Land |
-| 2D LiDAR failure | Hover in place | Fallback to D435i depth odometry / Optical flow | ABORT: Safe Land |
-| Depth-camera failure | Hover in place | Continue navigation via 2D LiDAR & obstacle map | ABORT: Return to Start |
-| Optical-flow failure | Hover in place | Rely on LiDAR odometry for horizontal hold | ABORT: PX4 Failsafe Land |
-| Rangefinder failure | Hold altitude | Estimate height via D435i depth / LiDAR scan | ABORT: Descend slowly & Land |
+| Stereo Depth Camera failure | Hover in place | Fallback to Optical Flow / IMU Dead-Reckoning | ABORT: Safe Land |
+| IMU failure | Hover in place | Rely on Stereo Depth Visual-Odom / Optical Flow | ABORT: Immediate Failsafe Land |
+| Optical-flow failure | Hover in place | Rely on Stereo Depth Camera Visual Odometry | ABORT: PX4 Failsafe Land |
+| Rangefinder failure | Hold altitude | Estimate height via D435i depth / IMU fusion | ABORT: Descend slowly & Land |
 | Person tracking loss | Hover at last position | Perform 360° yaw search sweep to re-acquire | ABORT: Return to Start |
 | Person route deviation | Hover in front of person | Re-compute safe corridor from human's current pose | ABORT: Trigger warning signal & Hover |
 | Planner failure / Invalid path | Stop & Hover | Re-compute path with relaxed non-critical constraints | ABORT: Return to Start |
@@ -534,21 +531,20 @@ The architecture defines measurable metrics:
 **Status: COMPLETE**
 
 #### Phase 2.2 — GPS-Denied Sensor & Localization Foundation
-* IMU.
+* High-rate IMU 6-DOF sensor.
 * PMW3901 optical flow.
-* Rangefinder.
-* 2D LiDAR (`/scan`).
-* D435i Depth/RGB camera streams.
+* Downward Rangefinder.
+* Intel RealSense D435i Stereo Depth & RGB camera streams.
 * PX4 EKF2 parameter profile (`EKF2_GPS_CTRL=0`, `EKF2_OF_CTRL=1`, `EKF2_HGT_MODE=2`).
 * Diagnostic sensor health monitor node.
 **Status: COMPLETE**
 
-#### Phase 2.3 — LiDAR Mapping & 2D SLAM
-* `/scan` + temporary simulation odometry bridge (`sim_tf_publisher`: NED/FRD -> ENU/FLU).
-* `slam_toolbox` in `online_async` mode (0.05m grid cell resolution).
-* 2D Occupancy Grid Map (`/map`) publication at 1 Hz.
+#### Phase 2.3 — Visual-Depth SLAM & Stereo Depth Mapping
+* `/camera/depth/image_raw` + `/camera/depth/color/points` + IMU visual odometry.
+* Visual-Depth SLAM in 3D PointCloud mode (0.05m grid cell resolution).
+* 3D Occupancy Grid & PointCloud Map (`/map`) publication at 1 Hz.
 * Dynamic transform publishing (`map -> odom` at 50 Hz).
-* Complete TF tree: `map` -> `odom` -> `base_link` -> `actual_lidar_frame`.
+* Complete TF tree: `map` -> `odom` -> `base_link` -> `camera_link`.
 * Zero ground-truth input to SLAM/TF node.
 **Status: COMPLETE**
 

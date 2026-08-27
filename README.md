@@ -128,7 +128,7 @@ python3 -m pytest src/robofest_sim/test/ src/px4_offboard/test/
 For detailed architectural, theoretical, and simulation documentation, refer to the dedicated guides:
 
 * **[SIMULATION.md](SIMULATION.md)** — Complete simulation showcase including embedded recording ([Watch on Google Drive](https://drive.google.com/file/d/1PemHGHgeK6kQS8JV9aWgJ4_nk7bf7xsx/view?usp=drive_link)) and step-by-step image analysis across all 5 flight phases (Pre-Flight Setup, Scout Scanning, Landing, Verification, RViz Verdict).
-* **[slam_architecture.md](slam_architecture.md)** — In-depth 2D LiDAR SLAM pipeline (`slam_toolbox`), PX4 EKF2 sensor fusion integration (LiDAR $X,Y$ + Rangefinder $Z$ + Optical Flow velocity), frame transforms, and hardware deployment options.
+* **[slam_architecture.md](slam_architecture.md)** — In-depth Visual-Depth SLAM pipeline (Stereo Depth Camera + IMU), PX4 EKF2 sensor fusion integration (Stereo Depth $X,Y$ + Rangefinder $Z$ + Optical Flow velocity), frame transforms, and hardware deployment options.
 * **[aerostack2_swarm_architecture.md](aerostack2_swarm_architecture.md)** — Comprehensive Aerostack2 (AS2) framework architecture blueprint, 5-layer system diagrams, Behavior Tree swarm control flow (`py_trees`), package mapping, and hardware deployment roadmap.
 
 ---
@@ -140,6 +140,6 @@ This project references and integrates components from the following open-source
 * **[Aerostack2 (`aerostack2/aerostack2`)](https://github.com/aerostack2/aerostack2)**: Referenced for multi-drone ROS 2 behavior-based control, Hardware Abstraction Layer (HAL) concepts, and hardware deployment roadmap (see [`aerostack2_swarm_architecture.md`](aerostack2_swarm_architecture.md)).
 * **[PX4 Autopilot (`PX4/PX4-Autopilot`)](https://github.com/PX4/PX4-Autopilot)**: Open-source flight stack providing multi-instance PX4 SITL physics simulation, offboard mode, and EKF2 sensor fusion.
 * **[Micro-XRCE-DDS Agent (`eProsima/Micro-XRCE-DDS-Agent`)](https://github.com/eProsima/Micro-XRCE-DDS-Agent)**: Client-agent middleware connecting PX4 uORB topics directly into ROS 2 nodes over high-speed UDP/Serial transport.
-* **[SLAM Toolbox (`SteveMacenski/slam_toolbox`)](https://github.com/SteveMacenski/slam_toolbox)**: 2D LiDAR SLAM & pose-graph optimization framework used for mapping and GPS-denied localization.
-* **[ROS-Gazebo Bridge (`gazebosim/ros_gz`)](https://github.com/gazebosim/ros_gz)**: ROS 2 to Gazebo Ignition / Harmonic transport bridge for 2D LiDAR scans, clock synchronization, and odometry feedback.
+* **[RTAB-Map / Visual-Depth SLAM (`introlab/rtabmap`)](https://github.com/introlab/rtabmap)**: Stereo Depth Camera & VIO pose-graph optimization framework used for 3D mapping and GPS-denied localization.
+* **[ROS-Gazebo Bridge (`gazebosim/ros_gz`)](https://github.com/gazebosim/ros_gz)**: ROS 2 to Gazebo Ignition / Harmonic transport bridge for Stereo Depth camera topics (`/camera/depth`, `/camera/points`), IMU, clock synchronization, and odometry feedback.
 

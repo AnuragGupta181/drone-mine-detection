@@ -1,12 +1,12 @@
-# 🛸 Swarm SLAM & Autonomous System Architecture
+# 🛸 Swarm Visual-Depth SLAM & Autonomous System Architecture
 
-This document provides a comprehensive overview of the **System Architecture**, **2D LiDAR SLAM Pipeline**, **Swarm Control Flow**, and the **Hardware Deployment Roadmap** (including Aerostack2 integration choices).
+This document provides a comprehensive overview of the **System Architecture**, **Stereo Depth Camera + IMU SLAM Pipeline**, **Swarm Control Flow**, and the **Hardware Deployment Roadmap** (including Aerostack2 integration choices).
 
 ---
 
 ## 1. Executive Summary & Flow Diagram
 
-The system operates in a **GPS-Denied Environment** using **2D LiDAR SLAM** (`slam_toolbox`) combined with **PX4 EKF2 Sensor Fusion** (Optical Flow + Rangefinder) for multi-drone autonomous minefield mapping, path planning, verification, and human escort.
+The system operates in a **GPS-Denied Environment** using a **Stereo Depth Camera (Intel RealSense D435i) + IMU Visual-Depth SLAM** combined with **PX4 EKF2 Sensor Fusion** (Optical Flow + Downward Rangefinder) for multi-drone autonomous minefield mapping, path planning, verification, and human escort.
 
 ```mermaid
 flowchart TD
@@ -17,7 +17,8 @@ flowchart TD
     classDef autonomy fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1.5px,color:#4a148c;
 
     subgraph Sensors["SENSORS & GAZEBO SIMULATION"]
-        Lidar["2D LiDAR (/scan)"]
+        StereoCam["Stereo Depth Camera (/camera/depth)"]
+        IMU["IMU Sensor (/imu/data)"]
         Range["Downward Rangefinder"]
         OF["Optical Flow"]
     end
@@ -28,7 +29,7 @@ flowchart TD
     end
 
     subgraph Localization["LOCALIZATION & ESTIMATION"]
-        SLAM["slam_toolbox (2D SLAM)"]
+        VSLAM["Visual-Depth SLAM (RTAB-Map / VIO)"]
         TFPub["sim_tf_publisher (odom -> base_link)"]
         ExtOdom["px4_ext_odom_node"]
         EKF2["PX4 EKF2 State Estimator"]
@@ -43,9 +44,9 @@ flowchart TD
 
     Sensors --> GZBridge
     Sensors --> XRCE
-    GZBridge --> SLAM
+    GZBridge --> VSLAM
     GZBridge --> TFPub
-    SLAM --> ExtOdom
+    VSLAM --> ExtOdom
     ExtOdom --> XRCE
     XRCE --> EKF2
     EKF2 --> SwarmNode
@@ -53,9 +54,9 @@ flowchart TD
     PathPlanner --> Verifier
     Verifier --> Walker
 
-    class Sensors,Lidar,Range,OF sensors;
+    class Sensors,StereoCam,IMU,Range,OF sensors;
     class Middleware,GZBridge,XRCE bridge;
-    class Localization,SLAM,TFPub,ExtOdom,EKF2 est;
+    class Localization,VSLAM,TFPub,ExtOdom,EKF2 est;
     class Autonomy,SwarmNode,PathPlanner,Verifier,Walker autonomy;
 ```
 
@@ -63,18 +64,19 @@ flowchart TD
 
 ## 2. Current Simulation Architecture Breakdown
 
-### A. Localization & Mapping Pipeline (`slam_toolbox`)
-* **Package**: `slam_toolbox` (`async_slam_toolbox_node`)
-* **Algorithm**: Graph-based 2D LiDAR SLAM with Karto optimizer.
-* **Input**: 2D Laser Scans (`/scan`, `/model/x500_lidar_2d_N/scan`).
+### A. Localization & Mapping Pipeline (Visual-Depth SLAM)
+* **Sensor Suite**: Intel RealSense D435i Stereo Depth Camera + High-Rate IMU.
+* **Algorithm**: Visual-Depth SLAM & PointCloud Obstacle Mapping.
+* **Input**: Stereo Depth Streams (`/camera/depth/image_raw`), PointClouds (`/camera/depth/color/points`), and IMU (`/imu/data`).
 * **Frame Hierarchy**:
-  $$\text{map} \longrightarrow \text{odom} \longrightarrow \text{base\_link} \longrightarrow \text{lidar\_link}$$
+  $$\text{map} \longrightarrow \text{odom} \longrightarrow \text{base\_link} \longrightarrow \text{camera\_link}$$
 
 ### B. PX4 Sensor Fusion (EKF2 Integration)
-To achieve stable 3D flight from a 2D LiDAR:
-1. **$X, Y$ Position & Yaw**: Derived from 2D LiDAR SLAM pose via `px4_ext_odom_node` fed into `VehicleOdometry` uORB topic.
-2. **$Z$ Altitude**: Measured directly by Downward Rangefinder / Distance Sensor.
-3. **Horizontal Velocity**: Estimated via Optical Flow sensor.
+To achieve ultra-stable 3D flight in GPS-denied environments:
+1. **$X, Y$ Position & Yaw**: Derived from Stereo Depth Camera Visual SLAM pose via `px4_ext_odom_node` fed into `VehicleOdometry` uORB topic.
+2. **6-DOF Motion Rates**: Measured continuously by high-frequency onboard IMU.
+3. **$Z$ Altitude**: Measured directly by Downward Rangefinder / Distance Sensor.
+4. **Horizontal Velocity**: Estimated via Optical Flow sensor.
 
 ### C. Swarm Control & Mission Pipeline
 * **Scouts (Drones 0, 1, 2)**: Sweep South ($Y=-2$), Center ($Y=0$), and North ($Y=+2$) lanes simultaneously.
@@ -86,13 +88,13 @@ To achieve stable 3D flight from a 2D LiDAR:
 
 ## 3. Hardware Deployment Options: Current Stack vs. Aerostack2
 
-When transitioning from **Gazebo Simulation** to **Real Physical Hardware** (e.g., NXP B3RB / Jetson Orin Nano + PX4 Autopilot + RPLiDAR A2/A3):
+When transitioning from **Gazebo Simulation** to **Real Physical Hardware** (e.g., NXP B3RB / Jetson Orin Nano + PX4 Autopilot + Intel RealSense D435i Stereo Depth Camera):
 
 ### Option A: Retain Native Custom ROS 2 Stack (Recommended for Initial Hardware Tests)
 * **Pros**:
   * 100% code reusability from simulation to real drones.
   * Direct low-latency control via `px4_msgs` over MicroXRCE-DDS (Serial/UART bridge).
-  * Lightweight footprint running directly on companion computers (Raspberry Pi 4 / Jetson Orin Nano).
+  * Lightweight footprint running directly on companion computers (Jetson Orin Nano / Raspberry Pi 4).
 * **Cons**: Manual configuration of companion-to-PX4 serial parameters.
 
 ### Option B: Migrate to Aerostack2 (AS2) Framework
@@ -111,6 +113,7 @@ When transitioning from **Gazebo Simulation** to **Real Physical Hardware** (e.g
 | Feature | Current Sim Stack (`robofest_sim`) | Hardware via Native ROS 2 | Hardware via Aerostack2 (AS2) |
 | :--- | :--- | :--- | :--- |
 | **Transport** | MicroXRCE-DDS (UDP / Sim) | MicroXRCE-DDS (UART/Serial) | AS2 Platform Driver for PX4 |
-| **SLAM** | `slam_toolbox` (Async) | `slam_toolbox` / Cartographer | AS2 SLAM / Localization Node |
+| **Primary Perception**| Stereo Depth Camera + IMU | Intel RealSense D435i | AS2 Depth Camera Plugin |
+| **Localization** | Visual-Depth SLAM | RTAB-Map / VIO | AS2 SLAM / Localization Node |
 | **Mission Logic** | Custom Python State Machine | Custom Python State Machine | AS2 Behavior Trees |
 | **Migration Risk**| None (Baseline) | **Low** (Change UDP $\to$ TTY) | **High** (Refactor to AS2 Actions) |

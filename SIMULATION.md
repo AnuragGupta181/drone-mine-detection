@@ -39,13 +39,13 @@ Welcome to the full simulation showcase of the **GPS-Denied Swarm Minefield Dete
 #### Parallel 3-Lane Minefield Scanning
 ![Parallel Scout Scan](public/simulation/6.png)
 * **Where & Perspective**: Gazebo 3D aerial view tracking the drones entering the minefield boundary ($X = 5\text{m}$).
-* **How & What**: Scout drones execute concurrent 2D LiDAR scanning across South ($Y=-2$), Center ($Y=0$), and North ($Y=+2$) lanes to detect mine positions in real-time.
+* **How & What**: Scout drones execute concurrent Stereo Depth Camera scanning across South ($Y=-2$), Center ($Y=0$), and North ($Y=+2$) lanes to detect mine positions in real-time.
 
 
 #### Precision Obstacle Avoidance (Drone 0 South)
 ![South Drone Avoidance](public/simulation/8.png)
 * **Where & Perspective**: Gazebo 3D close-up view of the South lane ($Y=-2.0\text{m}$).
-* **How & What**: Drone 0 adjusts yaw and lateral position to clear a tall rectangular block while maintaining its active LiDAR scan match.
+* **How & What**: Drone 0 adjusts yaw and lateral position to clear a tall rectangular block while maintaining its active Stereo Depth Camera feature tracking.
 
 #### Mid-Field Formation Scan
 ![Mid-Field Scout Formation](public/simulation/9.png)
@@ -60,7 +60,7 @@ Welcome to the full simulation showcase of the **GPS-Denied Swarm Minefield Dete
 #### Near-Obstacle Clearance Flight
 ![Close Obstacle Clearance](public/simulation/11.png)
 * **Where & Perspective**: Gazebo 3D low-angle view near a central tree trunk.
-* **How & What**: Scout 0 executes tight obstacle clearance, validating real-time rangefinder height readings and 2D scan matching.
+* **How & What**: Scout 0 executes tight obstacle clearance, validating real-time rangefinder height readings and Stereo Depth PointCloud features.
 
 #### Approach to Exit Zone
 ![Exit Approach](public/simulation/12.png)

@@ -28,7 +28,7 @@ Classical aerial robotics software typically couples flight control logic, senso
 
 4. **Modular Plug-and-Play State Estimation**:
    - The localization pipeline decouples estimation algorithms from flight controllers.
-   - State estimation plugins (e.g., `2D LiDAR SLAM`, `Visual Odometry`, `GPS`, or `Mocap`) output standardized `nav_msgs/Odometry` in the global `earth` frame.
+   - State estimation plugins (e.g., `Stereo Depth Camera Visual SLAM`, `Visual-Inertial Odometry (VIO)`, `GPS`, or `Mocap`) output standardized `nav_msgs/Odometry` in the global `earth` frame.
 
 ---
 
@@ -63,7 +63,7 @@ flowchart TD
     end
 
     subgraph EstimationLayer["LAYER 2: STATE ESTIMATION & LOCALIZATION"]
-        StateEst["as2_state_estimator (2D LiDAR SLAM / EKF2)"]
+        StateEst["as2_state_estimator (Stereo Depth Camera / IMU / EKF2)"]
     end
 
     subgraph PlatformLayer["LAYER 1: PLATFORM DRIVER (HARDWARE / SIM)"]
@@ -146,7 +146,7 @@ Here is how your current codebase maps directly to Aerostack2 official packages:
 | Functionality | Your Current Code (`robofest_sim`) | Aerostack2 Equivalent Package |
 | :--- | :--- | :--- |
 | **PX4 Interface** | Custom `px4_msgs` MicroXRCE bridge | `as2_platform_pixhawk` / `as2_platform_gazebo` |
-| **State Estimation** | `px4_ext_odom_node` + `slam_toolbox` | `as2_state_estimator` (Plugin: 2D LiDAR / EKF) |
+| **State Estimation** | `px4_ext_odom_node` + Visual-Depth SLAM | `as2_state_estimator` (Plugin: Stereo Depth Camera / EKF) |
 | **Motion Reference** | Custom setpoint publisher | `as2_motion_reference_generator` |
 | **Drone Controller**| `swarm_mission_node.py` | `as2_behavior_tree` + AS2 Behaviors (`as2_behavior_follow_path`) |
 | **Path Merger** | `safe_path_planner.py` | Custom AS2 Mission Plugin / ROS 2 Action Server |
