@@ -127,7 +127,7 @@ python3 -m pytest src/robofest_sim/test/ src/px4_offboard/test/
 
 For detailed architectural, theoretical, and simulation documentation, refer to the dedicated guides:
 
-* **[SIMULATION.md](SIMULATION.md)** — Complete simulation showcase including embedded recording (`main.mp4` at 2x playback speed) and step-by-step image analysis across all 5 flight phases (Pre-Flight Setup, Scout Scanning, Landing, Verification, RViz Verdict).
+* **[SIMULATION.md](SIMULATION.md)** — Complete simulation showcase including embedded recording ([Watch on Google Drive](https://drive.google.com/file/d/1PemHGHgeK6kQS8JV9aWgJ4_nk7bf7xsx/view?usp=drive_link)) and step-by-step image analysis across all 5 flight phases (Pre-Flight Setup, Scout Scanning, Landing, Verification, RViz Verdict).
 * **[slam_architecture.md](slam_architecture.md)** — In-depth 2D LiDAR SLAM pipeline (`slam_toolbox`), PX4 EKF2 sensor fusion integration (LiDAR $X,Y$ + Rangefinder $Z$ + Optical Flow velocity), frame transforms, and hardware deployment options.
 * **[aerostack2_swarm_architecture.md](aerostack2_swarm_architecture.md)** — Comprehensive Aerostack2 (AS2) framework architecture blueprint, 5-layer system diagrams, Behavior Tree swarm control flow (`py_trees`), package mapping, and hardware deployment roadmap.
 

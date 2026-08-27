@@ -6,9 +6,13 @@ Welcome to the full simulation showcase of the **GPS-Denied Swarm Minefield Dete
 
 ## Full Simulation Recording
 
-<div align="center">
-  <video src="public/simulation/main.mp4" controls width="100%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></video>
-</div>
+[![Watch Full Simulation Video on Google Drive](public/simulation/3.png)](https://drive.google.com/file/d/1PemHGHgeK6kQS8JV9aWgJ4_nk7bf7xsx/view?usp=drive_link)
+
+>**[Watch Full HD Simulation Recording on Google Drive](https://drive.google.com/file/d/1PemHGHgeK6kQS8JV9aWgJ4_nk7bf7xsx/view?usp=drive_link)**  
+> **[Download Local Repository Video (`main.mp4`)](public/simulation/main.mp4)**  
+> 
+> *Direct GitHub Video Stream:*  
+> https://github.com/AnuragGupta181/drone-mine-detection/raw/main/public/simulation/main.mp4
 
 ---
 
