@@ -87,6 +87,93 @@ flowchart TD
     class NavPlanning,SPP,TF,CM,CV nav;
 ```
 
+---
+
+## Package & Library Architecture Breakdown
+
+This section details the software stack, perception components, and data pipelines powering the 4-drone autonomous swarm.
+
+### 1. Core Drone Control & Middleware
+* **Aerostack2 (AS2)**: Comprehensive ROS 2 framework designed for multi-robot aerial systems, acting as swarm middleware for modular mission control and concurrent drone behaviors.
+* **PX4 Autopilot**: Flight control stack running on each drone, handling low-level hardware stabilization, arming, and motor commands.
+* **Micro XRCE-DDS**: Critical agent bridge between PX4 uORB and ROS 2 over UDP (ports 8888–8891) for fast telemetry and offboard setpoint integration.
+* **rclpy**: Standard Python client library for ROS 2 used heavily by the Single Point of Contact (Drone 3 / POC) to subscribe to point clouds and process safety coordinates.
+
+### 2. Vision & 3D Mapping Pipeline
+* **rtabmap-ros**: Graph-based Visual-Depth SLAM taking stereo depth feeds to incrementally build 3D point cloud maps.
+* **YOLO & OpenCV**: Real-time object detection processing camera frames to identify landmine visual signatures and anchor precise 3D coordinates onto the map.
+* **PCL-ros (Point Cloud Library)**: ROS 2 bridge for 3D geometry processing. Drone 3 (POC) uses PCL to filter, stitch, and merge point clouds from Drones 0, 1, and 2 into a master map.
+
+### 3. Pathfinding & Simulation Environment
+* **A* Algorithm**: Lowest-cost path search evaluating $f(n) = g(n) + h(n)$ over the unified 3D map to carve out a trajectory maintaining a strict 1-meter safety radius around mines.
+* **Gazebo & RViz**: Gazebo provides physics-based frontend simulation for drone dynamics; RViz serves as backend visualizer for point clouds, mine markers, and calculated paths.
+
+---
+
+### Swarm Flow Diagrams
+
+#### A. Mission Execution Workflow
+```mermaid
+graph TD
+    classDef default fill:#f9f9f9,stroke:#d3d3d3,stroke-width:2px,color:#333;
+    classDef action fill:#e1f5fe,stroke:#81d4fa,stroke-width:2px;
+    classDef final fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px;
+    classDef human fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#333;
+
+    A[System Arming]:::action --> B[Take Off]:::action
+    B --> C["Swarm Formation<br>by 3 Drones"]:::action
+    C --> D[Concurrent 3D Mapping & Detection]:::action
+    D --> E[Safe Path Calculation]:::action
+    E --> F["Path Verification<br>by 4th Drone"]:::final
+    F --> G[System Disarm]:::final
+    G --> H(("Human Traverses<br>Verified Safe Path")):::human
+```
+
+#### B. Swarm Telemetry & Single Point of Contact (POC) Topology
+```mermaid
+graph TD
+    classDef drone fill:#fff3e0,stroke:#ffcc80,stroke-width:2px,color:#333;
+    classDef middle fill:#f3e5f5,stroke:#ce93d8,stroke-width:2px,color:#333;
+    classDef poc fill:#e3f2fd,stroke:#90caf9,stroke-width:2px,color:#333;
+
+    PX4[PX4 Command]:::middle --> AS2((Aerostack 2 Middleware)):::middle
+
+    subgraph Mapping Swarm
+        D0[Drone 0 : UDP 8888]:::drone
+        D1[Drone 1 : UDP 8889]:::drone
+        D2[Drone 2 : UDP 8890]:::drone
+    end
+
+    AS2 --> D0
+    AS2 --> D1
+    AS2 --> D2
+
+    D0 -.-> |Sends 3D Point Cloud| D3
+    D1 -.-> |Sends 3D Point Cloud| D3
+    D2 -.-> |Sends 3D Point Cloud| D3
+
+    D3(("Drone 3 : POC<br>UDP 8891")):::poc
+```
+
+#### C. Perception, Fusion & Pathfinding Pipeline
+```mermaid
+graph TD
+    classDef hardware fill:#ffe0b2,stroke:#ffb74d,stroke-width:2px,color:#333;
+    classDef software fill:#c8e6c9,stroke:#81c784,stroke-width:2px,color:#333;
+    classDef map fill:#ffcdd2,stroke:#e57373,stroke-width:2px,color:#333;
+
+    Cam[Stereo Depth Camera]:::hardware --> RTAB[rtabmap-ros Package]:::software
+    Cam --> YOLO[YOLO + OpenCV Detection]:::software
+    
+    RTAB --> |Raw Point Clouds| Fusion[PCL-ros Fusion Node]:::software
+    YOLO --> |Mine Markers| Fusion
+    
+    Fusion --> SingleMap((Merged 3D Map)):::map
+    
+    SingleMap --> AStar[A-Star Algorithm]:::software
+    AStar --> SafePath(("Safe Human Path<br>1m Clearance")):::map
+```
+
 ## Running the Simulation
 
 You will need **3 separate terminal windows** to run the complete sequence.
